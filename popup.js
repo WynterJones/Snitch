@@ -241,7 +241,14 @@ function showLogDetails(log) {
         '<div class="binary-content">Binary content - see preview section below</div>';
     }
   } else {
-    responseBodySection.style.display = "none";
+    responseBodySection.style.display = "block";
+    const responseBodyContainer = document.getElementById("detailResponseBody");
+    const contentType = getContentTypeFromHeaders(log.responseHeaders);
+    responseBodyContainer.innerHTML = `<div class="binary-content">Response body not captured.<br><br>Content-Type: ${
+      contentType || "unknown"
+    }<br>Status: ${log.status}<br>From Cache: ${
+      log.fromCache ? "Yes" : "No"
+    }</div>`;
   }
 
   const previewSection = document.getElementById("previewSection");
@@ -301,7 +308,19 @@ function showLogDetails(log) {
         '<div class="no-preview">No preview available for this content type</div>';
     }
   } else {
-    previewSection.style.display = "none";
+    previewSection.style.display = "block";
+    const contentType = getContentTypeFromHeaders(log.responseHeaders);
+
+    if (contentType && contentType.startsWith("image/")) {
+      previewContent.innerHTML = `<img src="${log.url}" alt="Response Image" style="max-width: 100%; height: auto;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" /><div style="display: none;" class="no-preview">Image could not be loaded from URL</div>`;
+    } else if (contentType && contentType.startsWith("video/")) {
+      previewContent.innerHTML = `<video controls style="max-width: 100%;"><source src="${log.url}" type="${contentType}" onerror="this.parentElement.style.display='none'; this.parentElement.nextElementSibling.style.display='block';"></video><div style="display: none;" class="no-preview">Video could not be loaded from URL</div>`;
+    } else if (contentType && contentType.startsWith("audio/")) {
+      previewContent.innerHTML = `<audio controls style="width: 100%;"><source src="${log.url}" type="${contentType}" onerror="this.parentElement.style.display='none'; this.parentElement.nextElementSibling.style.display='block';"></audio><div style="display: none;" class="no-preview">Audio could not be loaded from URL</div>`;
+    } else {
+      previewContent.innerHTML =
+        '<div class="no-preview">No response body captured - cannot display preview</div>';
+    }
   }
 
   const responseHeadersSection = document.getElementById(

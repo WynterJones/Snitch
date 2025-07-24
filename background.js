@@ -20,11 +20,13 @@ chrome.webRequest.onBeforeRequest.addListener(
 
     const log = {
       id: Date.now() + Math.random(),
+      requestId: details.requestId,
       timestamp: new Date().toISOString(),
       method: details.method,
       url: details.url,
       type: details.type,
-      requestBody: null, // Initialize as null
+      requestBody: null,
+      responseBody: null,
       tabId: tabId,
       status: "pending",
     };
@@ -63,7 +65,11 @@ chrome.webRequest.onCompleted.addListener(
     if (tabId === -1 || !requestLogs[tabId]) return;
 
     const request = requestLogs[tabId].find(
-      (r) => r.url === details.url && r.method === details.method
+      (r) =>
+        r.requestId === details.requestId ||
+        (r.url === details.url &&
+          r.method === details.method &&
+          r.status === "pending")
     );
     if (request) {
       request.status = details.statusCode;
@@ -71,6 +77,10 @@ chrome.webRequest.onCompleted.addListener(
       request.statusLine = details.statusLine;
       request.fromCache = details.fromCache;
       request.completed = true;
+
+      if (details.fromCache || shouldFetchResponseBody(details)) {
+        fetchResponseBody(details.url, tabId, request);
+      }
 
       updateBadge(tabId);
       saveLogs();
@@ -86,7 +96,11 @@ chrome.webRequest.onErrorOccurred.addListener(
     if (tabId === -1 || !requestLogs[tabId]) return;
 
     const request = requestLogs[tabId].find(
-      (r) => r.url === details.url && r.method === details.method
+      (r) =>
+        r.requestId === details.requestId ||
+        (r.url === details.url &&
+          r.method === details.method &&
+          r.status === "pending")
     );
     if (request) {
       request.status = "error";
@@ -100,8 +114,64 @@ chrome.webRequest.onErrorOccurred.addListener(
   { urls: ["<all_urls>"] }
 );
 
+function shouldFetchResponseBody(details) {
+  const contentType =
+    getContentTypeFromHeaders(details.responseHeaders) ||
+    getContentTypeFromUrl(details.url);
+  return (
+    contentType &&
+    (contentType.startsWith("text/") ||
+      contentType.includes("json") ||
+      contentType.includes("javascript") ||
+      contentType.startsWith("image/") ||
+      contentType.startsWith("video/") ||
+      contentType.startsWith("audio/"))
+  );
+}
+
+function getContentTypeFromHeaders(headers) {
+  if (!Array.isArray(headers)) return null;
+  const contentTypeHeader = headers.find(
+    (header) => header.name.toLowerCase() === "content-type"
+  );
+  return contentTypeHeader ? contentTypeHeader.value : null;
+}
+
+async function fetchResponseBody(url, tabId, logEntry) {
+  try {
+    const response = await fetch(url);
+    const contentType =
+      response.headers.get("content-type") || getContentTypeFromUrl(url);
+
+    if (!contentType) return;
+
+    let body;
+    if (
+      contentType.startsWith("image/") ||
+      contentType.startsWith("video/") ||
+      contentType.startsWith("audio/")
+    ) {
+      const arrayBuffer = await response.arrayBuffer();
+      body = Array.from(new Uint8Array(arrayBuffer));
+    } else {
+      body = await response.text();
+    }
+
+    logEntry.responseBody = body;
+    logEntry.responseContentType = contentType;
+    saveLogs();
+  } catch (error) {
+    console.log("Could not fetch response body for:", url, error.message);
+  }
+}
+
 function updateBadge(tabId) {
-  const count = requestLogs[tabId] ? requestLogs[tabId].length : 0;
+  const allRequests = requestLogs[tabId] || [];
+  const successfulRequests = allRequests.filter(
+    (request) => request.status >= 200 && request.status < 300
+  );
+  const count = successfulRequests.length;
+
   chrome.action.setBadgeText({ text: count.toString(), tabId: tabId });
   chrome.action.setBadgeBackgroundColor({ color: "#4CAF50", tabId: tabId });
 }
@@ -117,13 +187,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.type === "SENATOR_RESPONSE") {
     const tabId = sender.tab?.id;
     if (tabId && requestLogs[tabId]) {
-      const log = requestLogs[tabId].find((r) => r.url === request.payload.url);
+      const log = requestLogs[tabId].find(
+        (r) =>
+          r.url === request.payload.url &&
+          (!r.responseBody || r.responseBody === null) &&
+          Math.abs(new Date(r.timestamp).getTime() - Date.now()) < 30000
+      );
       if (log) {
         log.responseBody = request.payload.body;
         log.responseType = request.payload.type;
         log.responseContentType =
-          request.payload.headers["content-type"] ||
-          getContentTypeFromUrl(request.payload.url);
+          request.payload.contentType ||
+          request.payload.headers["content-type"];
         saveLogs();
       }
     }
