@@ -1,0 +1,35 @@
+{
+  "name": "senator-chrome-extension",
+  "version": "1.0.0",
+  "description": "Network interception viewer and logger for non-devs with AI capabilities",
+  "main": "background.js",
+  "scripts": {
+    "build": "echo 'No build process needed for Chrome extension'",
+    "test": "echo 'Manual testing required for Chrome extension'",
+    "package": "zip -r senator-extension.zip . -x '*.git*' 'node_modules/*' '*.DS_Store'",
+    "dev": "echo 'Load unpacked in Chrome extensions page'"
+  },
+  "keywords": [
+    "chrome-extension",
+    "network-monitoring",
+    "ai-analysis",
+    "openai",
+    "web-requests",
+    "developer-tools"
+  ],
+  "author": "Senator Development Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/senator-chrome-extension.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/senator-chrome-extension/issues"
+  },
+  "homepage": "https://github.com/yourusername/senator-chrome-extension#readme",
+  "devDependencies": {},
+  "dependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

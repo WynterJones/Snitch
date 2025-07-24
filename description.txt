@@ -1,0 +1,108 @@
+# Senator - Network Interception & AI Analysis
+
+## Short Description
+Monitor network requests in real-time with AI-powered explanations. Perfect for non-technical users who want to understand what's happening behind the scenes on websites.
+
+## Detailed Description
+
+🔍 **See What's Happening Behind the Scenes**
+
+Senator is a powerful Chrome extension that monitors all network requests in real-time, giving you unprecedented visibility into what's happening when you browse websites. Unlike complex developer tools, Senator is designed for non-technical users who want to understand web activity without diving into technical details.
+
+🤖 **AI-Powered Intelligence**
+
+The magic happens with our OpenAI integration. Simply click "Explain with AI" on any request, and Senator will provide a clear, plain-English explanation of:
+• What the request does
+• Why it was made
+• Any potential issues or interesting aspects
+• What the response status means
+
+No technical knowledge required - just intelligent insights that make sense.
+
+📊 **Comprehensive Monitoring**
+
+Senator captures everything:
+• All HTTP requests (GET, POST, PUT, DELETE, etc.)
+• Request headers and body data
+• Response status codes and headers
+• Timestamps and tab information
+• Request types (API calls, resources, scripts, etc.)
+
+🎯 **Perfect For**
+
+• **Business Users**: Understand what data websites are collecting
+• **Privacy Advocates**: See what information is being sent to third parties
+• **Content Creators**: Monitor analytics and tracking requests
+• **Students**: Learn about web technologies in a user-friendly way
+• **Anyone Curious**: Satisfy your curiosity about how websites work
+
+🚀 **Key Features**
+
+• **Real-time Monitoring**: See requests as they happen
+• **Smart Statistics**: Track total requests and success rates
+• **Settings Panel**: Easy access to configuration with gear icon
+• **Request Details**: Clean modal view with formatted JSON
+• **Badge Counters**: Visual indicators of request activity
+• **Clean Interface**: Modern, intuitive design
+
+🔒 **Privacy & Security**
+
+• **Local Storage**: All data stays on your device
+• **No External Transmission**: Request data never leaves your browser (except for AI analysis)
+• **Selective Analysis**: Only requests you explicitly analyze are sent to OpenAI
+• **Secure API Keys**: Your OpenAI key is stored securely in Chrome's local storage
+
+⚡ **Easy Setup**
+
+1. Install the extension
+2. Add your OpenAI API key (get one free at platform.openai.com)
+3. Start browsing - Senator automatically captures requests
+4. Click the extension icon to view logs
+5. Click on any request to see detailed information
+6. Use the gear icon (⚙️) to access settings
+
+🎨 **Beautiful Interface**
+
+• Modern gradient design
+• Responsive layout
+• Intuitive controls
+• Clear visual indicators
+• Easy-to-read statistics
+
+📈 **Use Cases**
+
+• **E-commerce**: Monitor what data shopping sites collect
+• **Social Media**: See tracking and analytics requests
+• **News Sites**: Understand content delivery and ads
+• **Banking**: Verify secure communication (without sensitive data)
+• **Learning**: Educational tool for web technology
+
+🛠 **Technical Details**
+
+• Built with Manifest V3 (latest Chrome extension standard)
+• Uses Chrome's webRequest API for comprehensive monitoring
+• OpenAI GPT-3.5-turbo for intelligent analysis
+• Local storage for data persistence
+• Cross-site request monitoring
+
+💡 **Pro Tips**
+
+• Click on requests to view detailed information with formatted JSON
+• Clear logs regularly to maintain performance
+• Get AI explanations for complex requests
+• Monitor different types of websites to learn patterns
+
+🔧 **Support**
+
+• Comprehensive documentation included
+• Troubleshooting guides
+• Regular updates and improvements
+• Community support available
+
+Transform your browsing experience with Senator - the intelligent network monitor that makes web technology accessible to everyone.
+
+---
+
+**Note**: Requires an OpenAI API key for AI analysis features. Get one free at platform.openai.com with $5 credit included.
+
+**Privacy**: This extension only sends request metadata to OpenAI when you explicitly request AI analysis. No sensitive content or personal data is transmitted. 

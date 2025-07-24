@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+      :root {
+        --bg-main: #121212;
+        --bg-secondary: #1e1e1e;
+        --bg-tertiary: #2a2a2a;
+        --text-primary: #eaeaea;
+        --text-secondary: #a0a0a0;
+        --accent-gold: #d4af37;
+        --accent-gold-muted: #8a744b;
+        --border-color: #3a3a3a;
+        --success: #28a745;
+        --error: #dc3545;
+        --font-main: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        width: 500px;
+        min-height: 500px;
+        margin: 0;
+        font-family: var(--font-main);
+        background-color: var(--bg-main);
+        color: var(--text-primary);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .header {
+        background-color: var(--bg-secondary);
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .header-left img {
+        width: 64px;
+      }
+
+      .header-left h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--accent-gold);
+        letter-spacing: -0.5px;
+      }
+
+      .header-left p {
+        margin: 2px 0 0 0;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-secondary);
+      }
+
+      .header-toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .toolbar-btn {
+        background-color: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        font-size: 16px;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .toolbar-btn:hover {
+        background-color: #333;
+        color: var(--accent-gold);
+        border-color: var(--accent-gold-muted);
+        transform: translateY(-1px);
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .settings-panel {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .api-key-input {
+        background-color: var(--bg-main);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        border-radius: 6px;
+        padding: 10px;
+        font-size: 14px;
+        width: 100%;
+      }
+      .api-key-input:focus {
+        border-color: var(--accent-gold);
+        outline: none;
+      }
+
+      .btn {
+        background-color: var(--accent-gold);
+        color: var(--bg-main);
+        font-weight: 600;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+      .btn:hover {
+        background-color: #eac655;
+      }
+
+      .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+      .stat-item {
+        background-color: var(--bg-secondary);
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+      }
+      .stat-number {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+      .stat-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-top: 5px;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+      #successfulRequests {
+        color: var(--success);
+      }
+      #failedRequests {
+        color: var(--error);
+      }
+
+      .filter-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        justify-content: center;
+      }
+      .filter-tab {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        padding: 8px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+      }
+      .filter-tab:hover {
+        color: var(--text-primary);
+        border-color: var(--accent-gold-muted);
+      }
+      .filter-tab.active {
+        background-color: var(--accent-gold);
+        color: var(--bg-main);
+        border-color: var(--accent-gold);
+        font-weight: 700;
+      }
+
+      .logs-container {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background-color: var(--bg-secondary);
+        max-height: 250px;
+        overflow-y: auto;
+      }
+      .log-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+      }
+      .log-item:last-child {
+        border-bottom: none;
+      }
+      .log-item:hover {
+        background-color: var(--bg-tertiary);
+      }
+
+      .log-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .log-method {
+        font-weight: 600;
+        font-size: 12px;
+        min-width: 50px;
+        text-align: center;
+        padding: 4px 0;
+        border-radius: 4px;
+        text-transform: uppercase;
+      }
+      .log-method.get {
+        color: #81b29a;
+        background-color: rgba(129, 178, 154, 0.1);
+      }
+      .log-method.post {
+        color: #72a1d4;
+        background-color: rgba(114, 161, 212, 0.1);
+      }
+      .log-method.put {
+        color: #e0ac69;
+        background-color: rgba(224, 172, 105, 0.1);
+      }
+      .log-method.delete {
+        color: #e98074;
+        background-color: rgba(233, 128, 116, 0.1);
+      }
+      .log-method.patch {
+        color: #a3a3a3;
+        background-color: rgba(163, 163, 163, 0.1);
+      }
+
+      .log-url {
+        font-family: "SF Mono", "Fira Code", "Monaco", monospace;
+        font-size: 13px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-grow: 1;
+        text-align: left;
+        max-width: 250px; /* Added fixed width for truncation */
+      }
+
+      /* Custom Scrollbar Styles */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: var(--bg-tertiary);
+        border-radius: 10px;
+        border: 2px solid var(--bg-secondary);
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: var(--accent-gold-muted);
+      }
+
+      .log-status {
+        font-weight: 600;
+        font-size: 11px;
+        padding: 3px 6px;
+        border-radius: 4px;
+      }
+      .status-badge.success {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: var(--success);
+      }
+      .status-badge.error {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: var(--error);
+      }
+      .status-badge.pending {
+        background-color: rgba(212, 175, 55, 0.2);
+        color: var(--accent-gold);
+      }
+
+      /* New Detail View Styles */
+      .detail-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+      .back-btn {
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+      }
+      .back-btn:hover {
+        color: var(--text-primary);
+        border-color: var(--text-secondary);
+      }
+      .detail-header h2 {
+        color: var(--text-primary);
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .detail-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+      }
+      .detail-section h3 {
+        color: var(--text-primary);
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 12px;
+        margin: -20px -20px 15px -20px;
+        padding: 15px 20px;
+        background-color: rgba(0, 0, 0, 0.2);
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        font-size: 14px;
+      }
+
+      .info-list {
+        display: flex;
+        flex-direction: column;
+      }
+      .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .info-item:last-child {
+        border-bottom: none;
+      }
+      .info-item label {
+        font-size: 13px;
+        color: var(--text-secondary);
+        font-weight: 500;
+      }
+      .info-item span {
+        font-size: 13px;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-family: "SF Mono", "Fira Code", "Monaco", monospace;
+      }
+
+      .method-badge {
+        font-weight: 600;
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+      }
+      .method-badge.get {
+        color: #81b29a;
+        background-color: rgba(129, 178, 154, 0.1);
+      }
+      .method-badge.post {
+        color: #72a1d4;
+        background-color: rgba(114, 161, 212, 0.1);
+      }
+
+      .url-container {
+        background-color: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+      }
+      .url-text {
+        color: var(--text-secondary);
+        word-break: break-all;
+        font-size: 13px;
+      }
+
+      .json-container {
+        background-color: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        position: relative;
+      }
+      .copy-btn {
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        border-radius: 6px;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .copy-btn:hover {
+        color: var(--accent-gold);
+        border-color: var(--accent-gold-muted);
+      }
+      .json-content {
+        color: var(--text-secondary);
+        padding: 15px;
+        font-size: 13px;
+        max-height: 250px;
+        overflow-y: auto;
+      }
+      .json-key {
+        color: #9cdcfe;
+      }
+      .json-string {
+        color: #ce9178;
+      }
+      .json-number {
+        color: #b5cea8;
+      }
+      .json-boolean {
+        color: #569cd6;
+      }
+      .json-null {
+        color: #7f7f7f;
+      }
+
+      .analyze-btn {
+        background: var(--accent-gold);
+        color: var(--bg-main);
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .analyze-btn:hover {
+        background-color: #eac655;
+      }
+      .analyze-btn:disabled {
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        cursor: not-allowed;
+      }
+
+      .ai-result {
+        margin-top: 15px;
+        padding: 20px;
+        background-color: var(--bg-main);
+        border-radius: 8px;
+        border: 1px solid var(--accent-gold-muted);
+        border-left: 4px solid var(--accent-gold);
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        white-space: pre-wrap; /* Ensures numbered lists and newlines are rendered correctly */
+      }
+
+      .no-logs {
+        color: var(--text-secondary);
+        padding: 40px 20px;
+        text-align: center;
+        font-weight: 500;
+      }
+
+      /* New styles for fullscreen */
+      .hidden {
+        display: none;
+      }
+
+      #fullscreen-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--bg-main);
+        z-index: 1000;
+        overflow-y: auto;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      #fullscreen-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      #fullscreen-header h3 {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      #closeFullscreenBtn {
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+      }
+      #closeFullscreenBtn:hover {
+        color: var(--text-primary);
+        border-color: var(--text-secondary);
+      }
+
+      .control-btn {
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+      .control-btn:hover {
+        background-color: #333;
+        color: var(--accent-gold);
+        border-color: var(--accent-gold-muted);
+      }
+      #detailRequestBody pre,
+      #fullscreen-content {
+        white-space: pre-wrap;
+        word-break: break-all;
+        font-size: 12px;
+        background: #f4f4f4;
+        padding: 10px;
+        border-radius: 4px;
+      }
+
+      #settings-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #settings-modal {
+        background: var(--bg-main);
+        padding: 30px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 400px;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      #settings-modal h3 {
+        margin-top: 0;
+        margin-bottom: 25px;
+        text-align: center;
+        font-size: 22px;
+        color: var(--text-primary);
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: var(--text-secondary);
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 14px;
+      }
+
+      .save-btn {
+        width: 100%;
+        padding: 14px;
+        border-radius: 8px;
+        border: none;
+        background: var(--accent-gold);
+        color: #111;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .save-btn:hover {
+        background: var(--accent-gold-muted);
+      }
+
+      .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="header-left">
+        <img src="icons/250.png" alt="Snitch" />
+        <div>
+          <h1>Snitch</h1>
+          <p>Web Network Inspector with AI Explainer</p>
+        </div>
+      </div>
+      <div class="header-toolbar">
+        <button id="settingsBtn" class="toolbar-btn" title="Settings">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+          >
+            <g fill="none">
+              <g fill="currentColor" clip-path="url(#siSettingsDuotone0)">
+                <path
+                  fill-opacity="0.16"
+                  fill-rule="evenodd"
+                  d="M18.71 10H21v-.02c1.1 0 2 .9 2 2s-.9 2-2 2h-2.29c-.07.23-.15.46-.24.68c-.1.22-.2.44-.31.65l1.62 1.62c.78.78.78 2.05 0 2.83s-2.05.78-2.83 0l-1.62-1.62c-.21.12-.43.22-.65.31s-.45.17-.68.24v2.29c0 1.1-.9 2-2 2s-2-.9-2-2v-2.29c-.23-.07-.46-.15-.68-.24c-.22-.1-.44-.2-.65-.31l-1.62 1.62c-.78.78-2.05.78-2.83 0s-.78-2.05 0-2.83l1.62-1.62c-.12-.21-.22-.43-.31-.65s-.17-.45-.24-.68H3c-1.1 0-2-.9-2-2s.9-2 2-2h2.33a7.5 7.5 0 0 1 .54-1.32L4.25 7.04c-.78-.78-.78-2.05 0-2.83s2.05-.78 2.83 0L8.7 5.83c.21-.11.42-.21.64-.3h.01c.22-.09.44-.17.67-.24V3c0-1.1.9-2 2-2s2 .9 2 2v2.31c.23.07.45.15.67.24h.01c.22.09.43.19.64.3l1.62-1.62c.78-.78 2.05-.78 2.83 0s.78 2.05 0 2.83l-1.62 1.62a7.5 7.5 0 0 1 .54 1.32M16 12a4 4 0 1 1-8 0a4 4 0 0 1 8 0"
+                  clip-rule="evenodd"
+                />
+                <path
+                  d="M21 10v.75a.75.75 0 0 0 .75-.75zm-2.29 0l-.718.218a.75.75 0 0 0 .718.532zm-.54-1.32l-.53-.53a.75.75 0 0 0-.134.878zm1.62-1.62l.53.53zm-2.83-2.83l-.53-.53zm-1.62 1.62l-.348.664a.75.75 0 0 0 .878-.134zm-.64-.3l.284-.694A.8.8 0 0 0 14.7 4.8zm-.01 0l-.284.694a.8.8 0 0 0 .284.056zm-.67-.24h-.75c0 .33.216.621.532.718zm-4-.02l.218.718a.75.75 0 0 0 .532-.718zm-.67.24v.75a.8.8 0 0 0 .284-.056zm-.01 0v-.75a.8.8 0 0 0-.284.056zm-.64.3l-.53.53a.75.75 0 0 0 .878.134zM5.87 8.66l.664.348A.75.75 0 0 0 6.4 8.13zm-.54 1.32v.75a.75.75 0 0 0 .718-.532zm-.04 4l.718-.218a.75.75 0 0 0-.718-.532zm.55 1.33l.53.53a.75.75 0 0 0 .121-.902zm-1.62 1.62l-.53-.53zm2.83 2.83l.53.53zm1.62-1.62l.348-.664a.75.75 0 0 0-.878.134zm.65.31l-.31.683l.026.011zm.68.24h.75a.75.75 0 0 0-.532-.718zm4 0l-.218-.718a.75.75 0 0 0-.532.718zm1.33-.55l.53-.53a.75.75 0 0 0-.902-.121zm4.45-1.21l.53-.53zm-1.62-1.62l-.664-.348a.75.75 0 0 0 .134.878zm.31-.65l.683.31l.011-.026zm.24-.68v-.75a.75.75 0 0 0-.718.532zm2.29-4v-.75a.75.75 0 0 0-.75.75zm0-.73h-2.29v1.5H21zm-1.573.532a9 9 0 0 0-.263-.746l-1.388.568c.08.195.152.403.216.614zm-.263-.746a8 8 0 0 0-.33-.704l-1.328.696c.1.193.19.382.27.576zm-.464.174l1.62-1.62l-1.06-1.06l-1.62 1.62zm1.62-1.62a2.754 2.754 0 0 0 0-3.89l-1.06 1.06a1.254 1.254 0 0 1 0 1.77zm0-3.89a2.754 2.754 0 0 0-3.89 0l1.06 1.06a1.254 1.254 0 0 1 1.77 0zm-3.89 0l-1.62 1.62l1.06 1.06l1.62-1.62zm-.742 1.486a8 8 0 0 0-.704-.33l-.568 1.388c.194.08.383.17.576.27zm-.988.364V4.8h-.01v1.5h.01zm.274-.694a8 8 0 0 0-.736-.264l-.436 1.436c.204.062.402.134.604.216zm-.204.454V3h-1.5v2.31zm0-2.31A2.756 2.756 0 0 0 12.02.25v1.5c.686 0 1.25.564 1.25 1.25zM12.02.25A2.756 2.756 0 0 0 9.27 3h1.5c0-.686.564-1.25 1.25-1.25zM9.27 3v2.29h1.5V3zm.532 1.572a8 8 0 0 0-.736.264l.568 1.388c.202-.082.4-.154.604-.216zm-.452.958v-.75h-.01v1.5h.01zm-.294-.694c-.246.1-.477.21-.704.33l.696 1.328c.193-.1.382-.19.576-.27zm.174.464L7.61 3.68L6.55 4.74l1.62 1.62zM7.61 3.68a2.754 2.754 0 0 0-3.89 0l1.06 1.06a1.254 1.254 0 0 1 1.77 0zm-3.89 0a2.754 2.754 0 0 0 0 3.89l1.06-1.06a1.254 1.254 0 0 1 0-1.77zm0 3.89l1.62 1.62L6.4 8.13L4.78 6.51zm1.486.742c-.12.227-.23.458-.33.704l1.388.568c.08-.194.17-.383.27-.576zm-.33.704c-.1.245-.188.497-.264.746l1.436.436c.064-.211.136-.419.216-.614zm.454.214H3v1.5h2.33zM3 9.23a2.756 2.756 0 0 0-2.75 2.75h1.5c0-.686.564-1.25 1.25-1.25zM.25 11.98A2.756 2.756 0 0 0 3 14.73v-1.5c-.686 0-1.25-.564-1.25-1.25zM3 14.73h2.29v-1.5H3zm1.572-.532c.076.249.164.501.264.746l1.388-.568a7 7 0 0 1-.216-.614zm.264.746c.097.237.21.49.353.738l1.302-.744a5 5 0 0 1-.267-.562zm.474-.164L3.69 16.4l1.06 1.06l1.62-1.62zM3.69 16.4a2.754 2.754 0 0 0 0 3.89l1.06-1.06a1.254 1.254 0 0 1 0-1.77zm0 3.89a2.754 2.754 0 0 0 3.89 0l-1.06-1.06a1.254 1.254 0 0 1-1.77 0zm3.89 0l1.62-1.62l-1.06-1.06l-1.62 1.62zm.742-1.486c.232.122.471.23.688.329l.62-1.366a12 12 0 0 1-.612-.291zm.714.34c.245.1.497.188.746.264l.436-1.436a7 7 0 0 1-.614-.216zm.214-.454v2.29h1.5v-2.29zm0 2.29A2.756 2.756 0 0 0 12 23.73v-1.5c-.686 0-1.25-.564-1.25-1.25zM12 23.73a2.756 2.756 0 0 0 2.75-2.75h-1.5c0 .686-.564 1.25-1.25 1.25zm2.75-2.75v-2.29h-1.5v2.29zm-.532-1.573c.249-.075.501-.163.746-.263l-.568-1.388c-.195.08-.403.152-.614.216zm.746-.263c.237-.097.49-.21.738-.353l-.744-1.302a5 5 0 0 1-.562.267zm-.164-.474l1.62 1.62l1.06-1.06l-1.62-1.62zm1.62 1.62a2.754 2.754 0 0 0 3.89 0l-1.06-1.06a1.254 1.254 0 0 1-1.77 0zm3.89 0a2.754 2.754 0 0 0 0-3.89l-1.06 1.06a1.254 1.254 0 0 1 0 1.77zm0-3.89l-1.62-1.62l-1.06 1.06l1.62 1.62zm-1.486-.742c.122-.232.23-.471.329-.688l-1.366-.62a12 12 0 0 1-.291.612zm.34-.714c.1-.245.188-.497.263-.746l-1.434-.436a7 7 0 0 1-.217.614zm-.454-.214H21v-1.5h-2.29zm2.29 0a2.756 2.756 0 0 0 2.75-2.75h-1.5c0 .686-.564 1.25-1.25 1.25zm2.75-2.75A2.756 2.756 0 0 0 21 9.23v1.5c.686 0 1.25.564 1.25 1.25zm-3.5-2V10h1.5v-.02zm-5 2.02A3.25 3.25 0 0 1 12 15.25v1.5A4.75 4.75 0 0 0 16.75 12zM12 15.25A3.25 3.25 0 0 1 8.75 12h-1.5A4.75 4.75 0 0 0 12 16.75zM8.75 12A3.25 3.25 0 0 1 12 8.75v-1.5A4.75 4.75 0 0 0 7.25 12zM12 8.75A3.25 3.25 0 0 1 15.25 12h1.5A4.75 4.75 0 0 0 12 7.25z"
+                />
+              </g>
+              <defs>
+                <clipPath id="siSettingsDuotone0">
+                  <path fill="#fff" d="M0 0h24v24H0z" />
+                </clipPath>
+              </defs>
+            </g>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="mainContent" class="content">
+      <div
+        id="settingsPanel"
+        class="section settings-panel"
+        style="display: none"
+      >
+        <h3>Settings</h3>
+        <div class="setting-item">
+          <label for="apiKeyInput">OpenAI API Key</label>
+          <input
+            type="password"
+            id="apiKeyInput"
+            class="api-key-input"
+            placeholder="Enter API key"
+          />
+          <button id="saveApiKey" class="btn">Save</button>
+        </div>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-number" id="totalRequests">0</div>
+          <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="successfulRequests">0</div>
+          <div class="stat-label">Success</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="failedRequests">0</div>
+          <div class="stat-label">Failed</div>
+        </div>
+      </div>
+
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="ALL">ALL</button>
+        <button class="filter-tab" data-filter="GET">GET</button>
+        <button class="filter-tab" data-filter="POST">POST</button>
+        <button class="filter-tab" data-filter="PUT">PUT</button>
+        <button class="filter-tab" data-filter="DELETE">DELETE</button>
+        <button class="filter-tab" data-filter="PATCH">PATCH</button>
+      </div>
+
+      <div id="logsContainer" class="logs-container">
+        <div class="no-logs">No requests logged yet.</div>
+      </div>
+    </div>
+
+    <div id="detailContent" class="content" style="display: none">
+      <div class="detail-header">
+        <button id="backBtn" class="back-btn">← Back</button>
+        <h2 id="detailTitle">Request Details</h2>
+      </div>
+
+      <div class="detail-sections">
+        <div class="detail-section">
+          <h3>AI Analysis</h3>
+          <div id="aiAnalysisContainer">
+            <button id="analyzeBtn" class="analyze-btn">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fill="currentColor"
+                  d="M5.465 9.83a.92.92 0 0 0 1.07-.001a1 1 0 0 0 .341-.459l.347-1.067a1.7 1.7 0 0 1 1.078-1.079l1.086-.353a.923.923 0 0 0-.037-1.75l-1.069-.346a1.7 1.7 0 0 1-1.08-1.078l-.353-1.084a.92.92 0 0 0-.869-.61a.92.92 0 0 0-.875.624l-.356 1.09A1.71 1.71 0 0 1 3.7 4.775l-1.084.351a.923.923 0 0 0 .013 1.745l1.067.347a1.71 1.71 0 0 1 1.081 1.083l.352 1.08c.063.18.181.337.337.448m5.07 4.021a.8.8 0 0 0 .464.148a.81.81 0 0 0 .759-.55l.248-.762c.053-.158.143-.303.26-.421s.262-.207.42-.259l.772-.252a.8.8 0 0 0-.023-1.521l-.764-.249a1.08 1.08 0 0 1-.68-.678l-.252-.774a.8.8 0 0 0-1.518.011l-.247.762a1.07 1.07 0 0 1-.664.679l-.776.253a.8.8 0 0 0-.388 1.221c.099.14.239.245.4.3l.763.247a1.08 1.08 0 0 1 .68.683l.253.774a.8.8 0 0 0 .292.388"
+                />
+              </svg>
+              <span>Analyze with AI</span>
+            </button>
+            <div id="aiResult" class="ai-result" style="display: none"></div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Basic Information</h3>
+          <div class="info-list">
+            <div class="info-item">
+              <label>Method</label><span id="detailMethod"></span>
+            </div>
+            <div class="info-item">
+              <label>Status</label><span id="detailStatus"></span>
+            </div>
+            <div class="info-item">
+              <label>Type</label><span id="detailType"></span>
+            </div>
+            <div class="info-item">
+              <label>Timestamp</label><span id="detailTimestamp"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>URL</h3>
+          <div class="url-container">
+            <span id="detailUrl" class="url-text"></span>
+          </div>
+        </div>
+
+        <div class="detail-section" id="requestBodySection">
+          <div class="detail-section-header">
+            <h4>Request Body</h4>
+            <div class="controls">
+              <button id="fullscreenBtn" class="control-btn">Fullscreen</button>
+              <button id="increaseFontBtn" class="control-btn">+</button>
+              <button id="decreaseFontBtn" class="control-btn">-</button>
+            </div>
+          </div>
+          <pre id="detailRequestBody"></pre>
+        </div>
+
+        <div class="detail-section" id="responseBodySection">
+          <div class="detail-section-header">
+            <h4>Response Body</h4>
+            <div class="controls">
+              <button id="fullscreenResponseBtn" class="control-btn">
+                Fullscreen
+              </button>
+              <button id="increaseResponseFontBtn" class="control-btn">
+                +
+              </button>
+              <button id="decreaseResponseFontBtn" class="control-btn">
+                -
+              </button>
+            </div>
+          </div>
+          <pre id="detailResponseBody"></pre>
+        </div>
+
+        <div
+          id="responseHeadersSection"
+          class="detail-section"
+          style="display: none"
+        >
+          <h3>Response Headers</h3>
+          <div class="json-container">
+            <pre id="detailResponseHeaders" class="json-content"></pre>
+            <button id="copyHeadersBtn" class="copy-btn" title="Copy JSON">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+              >
+                <g fill="none">
+                  <path
+                    d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M19 2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-2v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2zm-9 13H8a1 1 0 0 0-.117 1.993L8 17h2a1 1 0 0 0 .117-1.993zm9-11H9v2h6a2 2 0 0 1 2 2v8h2zm-7 7H8a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2"
+                  />
+                </g>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="fullscreen-overlay" class="hidden">
+      <div id="fullscreen-header">
+        <h3 id="fullscreen-title"></h3>
+        <button id="closeFullscreenBtn" class="control-btn">Close</button>
+      </div>
+      <pre id="fullscreen-content"></pre>
+    </div>
+
+    <div id="settings-overlay" class="hidden">
+      <div id="settings-modal">
+        <h3>Settings</h3>
+        <div class="form-group">
+          <label for="apiKeyInput">OpenAI API Key</label>
+          <input
+            type="password"
+            id="apiKeyInput"
+            placeholder="Enter your API key"
+          />
+        </div>
+        <button id="saveApiKey" class="save-btn">Save</button>
+        <button id="closeSettingsBtn" class="close-btn">&times;</button>
+      </div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
