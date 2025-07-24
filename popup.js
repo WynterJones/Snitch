@@ -114,13 +114,17 @@ async function loadLogs() {
 function displayLogs() {
   const container = document.getElementById("logsContainer");
 
-  if (filteredLogs.length === 0) {
+  const successfulLogs = filteredLogs.filter(
+    (log) => log.status >= 200 && log.status < 300
+  );
+
+  if (successfulLogs.length === 0) {
     container.innerHTML =
-      '<div class="no-logs">No requests found for the selected filter.</div>';
+      '<div class="no-logs">No successful requests found for the selected filter.</div>';
     return;
   }
 
-  const recentLogs = filteredLogs.slice(-20).reverse();
+  const recentLogs = successfulLogs.slice(-20).reverse();
   container.innerHTML = recentLogs.map((log) => createLogItem(log)).join("");
 
   const logItems = container.querySelectorAll(".log-item");
@@ -259,6 +263,59 @@ function showLogDetails(log) {
     responseBodySection.style.display = "none";
   }
 
+  const previewSection = document.getElementById("previewSection");
+  const previewContent = document.getElementById("previewContent");
+
+  if (log.method === "GET" && log.responseBody) {
+    previewSection.style.display = "block";
+
+    const contentType =
+      log.responseContentType || getContentTypeFromHeaders(log.responseHeaders);
+
+    if (contentType && contentType.startsWith("image/")) {
+      if (Array.isArray(log.responseBody)) {
+        const uint8Array = new Uint8Array(log.responseBody);
+        const blob = new Blob([uint8Array], { type: contentType });
+        const imageUrl = URL.createObjectURL(blob);
+        previewContent.innerHTML = `<img src="${imageUrl}" alt="Response Image" />`;
+      } else {
+        previewContent.innerHTML = `<img src="${log.url}" alt="Response Image" />`;
+      }
+    } else if (contentType && contentType.startsWith("video/")) {
+      if (Array.isArray(log.responseBody)) {
+        const uint8Array = new Uint8Array(log.responseBody);
+        const blob = new Blob([uint8Array], { type: contentType });
+        const videoUrl = URL.createObjectURL(blob);
+        previewContent.innerHTML = `<video controls><source src="${videoUrl}" type="${contentType}"></video>`;
+      } else {
+        previewContent.innerHTML = `<video controls><source src="${log.url}" type="${contentType}"></video>`;
+      }
+    } else if (contentType && contentType.startsWith("audio/")) {
+      if (Array.isArray(log.responseBody)) {
+        const uint8Array = new Uint8Array(log.responseBody);
+        const blob = new Blob([uint8Array], { type: contentType });
+        const audioUrl = URL.createObjectURL(blob);
+        previewContent.innerHTML = `<audio controls><source src="${audioUrl}" type="${contentType}"></audio>`;
+      } else {
+        previewContent.innerHTML = `<audio controls><source src="${log.url}" type="${contentType}"></audio>`;
+      }
+    } else if (
+      contentType &&
+      (contentType.includes("json") || contentType.includes("javascript"))
+    ) {
+      try {
+        const jsonData = JSON.parse(log.responseBody);
+        previewContent.innerHTML = `<pre>${formatJSON(jsonData)}</pre>`;
+      } catch (e) {
+        previewContent.innerHTML = `<pre>${log.responseBody}</pre>`;
+      }
+    } else {
+      previewContent.innerHTML = `<pre>${log.responseBody}</pre>`;
+    }
+  } else {
+    previewSection.style.display = "none";
+  }
+
   const responseHeadersSection = document.getElementById(
     "responseHeadersSection"
   );
@@ -292,6 +349,16 @@ function formatHeaders(headers) {
         `<div><span class="header-name">${header.name}:</span> ${header.value}</div>`
     )
     .join("");
+}
+
+function getContentTypeFromHeaders(headers) {
+  if (!Array.isArray(headers)) return null;
+
+  const contentTypeHeader = headers.find(
+    (header) => header.name.toLowerCase() === "content-type"
+  );
+
+  return contentTypeHeader ? contentTypeHeader.value : null;
 }
 
 let isFullscreen = false;

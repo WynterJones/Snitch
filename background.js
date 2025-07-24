@@ -120,6 +120,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const log = requestLogs[tabId].find((r) => r.url === request.payload.url);
       if (log) {
         log.responseBody = request.payload.body;
+        log.responseType = request.payload.type;
+        log.responseContentType =
+          request.payload.headers["content-type"] ||
+          getContentTypeFromUrl(request.payload.url);
         saveLogs();
       }
     }
@@ -184,6 +188,22 @@ Keep it simple and non-technical.`;
   } catch (error) {
     return { error: "Failed to get explanation: " + error.message };
   }
+}
+
+function getContentTypeFromUrl(url) {
+  const extension = url.split(".").pop().toLowerCase();
+  const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"];
+  const videoExtensions = ["mp4", "webm", "ogg", "avi", "mov"];
+  const audioExtensions = ["mp3", "wav", "ogg", "aac", "m4a"];
+
+  if (imageExtensions.includes(extension)) {
+    return `image/${extension === "jpg" ? "jpeg" : extension}`;
+  } else if (videoExtensions.includes(extension)) {
+    return `video/${extension}`;
+  } else if (audioExtensions.includes(extension)) {
+    return `audio/${extension}`;
+  }
+  return null;
 }
 
 chrome.tabs.onRemoved.addListener((tabId) => {

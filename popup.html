@@ -512,6 +512,43 @@
         display: none;
       }
 
+      .detail-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .detail-section-header h4 {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .controls {
+        display: flex;
+        gap: 8px;
+      }
+
+      #previewContent img,
+      #previewContent video,
+      #previewContent audio {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 8px;
+      }
+
+      #previewContent pre {
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 15px;
+        max-height: 300px;
+        overflow-y: auto;
+        font-size: 13px;
+      }
+
       #settings-overlay.hidden {
         display: none;
       }
@@ -586,9 +623,11 @@
         white-space: pre-wrap;
         word-break: break-all;
         font-size: 12px;
-        background: #f4f4f4;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
         padding: 10px;
         border-radius: 4px;
+        border: 1px solid var(--border-color);
       }
 
       #settings-overlay {
@@ -823,6 +862,13 @@
             </div>
           </div>
           <pre id="detailResponseBody"></pre>
+        </div>
+
+        <div class="detail-section" id="previewSection">
+          <div class="detail-section-header">
+            <h4>Preview</h4>
+          </div>
+          <div id="previewContent"></div>
         </div>
 
         <div

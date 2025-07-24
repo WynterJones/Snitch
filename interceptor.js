@@ -8,7 +8,20 @@ window.fetch = async (...args) => {
     headers[key] = value;
   }
 
-  const body = await responseClone.text();
+  const contentType = headers["content-type"] || "";
+  let body;
+
+  if (
+    contentType.startsWith("image/") ||
+    contentType.startsWith("video/") ||
+    contentType.startsWith("audio/")
+  ) {
+    const arrayBuffer = await responseClone.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    body = Array.from(uint8Array);
+  } else {
+    body = await responseClone.text();
+  }
 
   window.postMessage(
     {
@@ -20,6 +33,7 @@ window.fetch = async (...args) => {
         status: response.status,
         statusText: response.statusText,
         type: "fetch",
+        contentType,
       },
     },
     "*"
@@ -40,16 +54,35 @@ XMLHttpRequest.prototype.open = function (method, url) {
 XMLHttpRequest.prototype.send = function () {
   this.addEventListener("load", () => {
     if (this.responseURL) {
+      const contentType = this.getResponseHeader("content-type") || "";
+      let body;
+
+      if (
+        contentType.startsWith("image/") ||
+        contentType.startsWith("video/") ||
+        contentType.startsWith("audio/")
+      ) {
+        if (this.response instanceof ArrayBuffer) {
+          const uint8Array = new Uint8Array(this.response);
+          body = Array.from(uint8Array);
+        } else {
+          body = this.response;
+        }
+      } else {
+        body = this.response;
+      }
+
       window.postMessage(
         {
           type: "SENATOR_RESPONSE",
           payload: {
             url: this.responseURL,
-            body: this.response,
+            body,
             headers: this.getAllResponseHeaders(),
             status: this.status,
             statusText: this.statusText,
             type: "xhr",
+            contentType,
           },
         },
         "*"
