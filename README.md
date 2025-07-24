@@ -1,4 +1,4 @@
-# Senator - Network Interception & AI Analysis
+# Snitch - Network Interception & AI Analysis
 
 A powerful Chrome extension for network request interception, logging, and AI-powered analysis designed for non-technical users.
 

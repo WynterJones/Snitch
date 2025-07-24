@@ -74,18 +74,25 @@ function setupEventListeners() {
   document
     .getElementById("decreaseResponseFontBtn")
     .addEventListener("click", () => changeFontSize(-2, "response"));
+
+  document
+    .getElementById("closeSettingsBtn")
+    .addEventListener("click", toggleSettings);
+  document
+    .getElementById("saveApiKeyModal")
+    .addEventListener("click", saveApiKey);
 }
 
 async function loadApiKey() {
   const response = await chrome.runtime.sendMessage({ action: "getApiKey" });
   if (response.apiKey) {
-    document.getElementById("apiKeyInput").value = response.apiKey;
+    document.getElementById("apiKeyInputModal").value = response.apiKey;
     hasApiKey = true;
   }
 }
 
 async function saveApiKey() {
-  const apiKey = document.getElementById("apiKeyInput").value.trim();
+  const apiKey = document.getElementById("apiKeyInputModal").value.trim();
   if (!apiKey) {
     alert("Please enter a valid OpenAI API key");
     return;

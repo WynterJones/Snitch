@@ -709,24 +709,6 @@
     </div>
 
     <div id="mainContent" class="content">
-      <div
-        id="settingsPanel"
-        class="section settings-panel"
-        style="display: none"
-      >
-        <h3>Settings</h3>
-        <div class="setting-item">
-          <label for="apiKeyInput">OpenAI API Key</label>
-          <input
-            type="password"
-            id="apiKeyInput"
-            class="api-key-input"
-            placeholder="Enter API key"
-          />
-          <button id="saveApiKey" class="btn">Save</button>
-        </div>
-      </div>
-
       <div class="stats-bar">
         <div class="stat-item">
           <div class="stat-number" id="totalRequests">0</div>
@@ -882,14 +864,14 @@
       <div id="settings-modal">
         <h3>Settings</h3>
         <div class="form-group">
-          <label for="apiKeyInput">OpenAI API Key</label>
+          <label for="apiKeyInputModal">OpenAI API Key</label>
           <input
             type="password"
-            id="apiKeyInput"
+            id="apiKeyInputModal"
             placeholder="Enter your API key"
           />
         </div>
-        <button id="saveApiKey" class="save-btn">Save</button>
+        <button id="saveApiKeyModal" class="save-btn">Save</button>
         <button id="closeSettingsBtn" class="close-btn">&times;</button>
       </div>
     </div>
