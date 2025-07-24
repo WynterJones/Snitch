@@ -25,8 +25,8 @@
       }
 
       body {
-        width: 500px;
-        min-height: 500px;
+        width: 800px;
+        min-height: 600px;
         margin: 0;
         font-family: var(--font-main);
         background-color: var(--bg-main);
@@ -195,6 +195,148 @@
         color: var(--bg-main);
         border-color: var(--accent-gold);
         font-weight: 700;
+      }
+
+      .table-container {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background-color: var(--bg-secondary);
+        overflow: hidden;
+      }
+
+      #requestsTable {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      #requestsTable thead {
+        background-color: var(--bg-tertiary);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      #requestsTable th {
+        padding: 12px 15px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--text-primary);
+        border-right: 1px solid var(--border-color);
+      }
+
+      #requestsTable th:last-child {
+        border-right: none;
+      }
+
+      #requestsTable tbody tr {
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+
+      #requestsTable tbody tr:hover {
+        background-color: var(--bg-tertiary);
+      }
+
+      #requestsTable tbody tr:last-child {
+        border-bottom: none;
+      }
+
+      #requestsTable td {
+        padding: 10px 15px;
+        border-right: 1px solid var(--border-color);
+        vertical-align: middle;
+      }
+
+      #requestsTable td:last-child {
+        border-right: none;
+      }
+
+      .request-name {
+        color: var(--text-primary);
+        font-weight: 500;
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .request-method {
+        font-weight: 600;
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        display: inline-block;
+        min-width: 45px;
+        text-align: center;
+      }
+
+      .request-method.get {
+        color: #81b29a;
+        background-color: rgba(129, 178, 154, 0.1);
+      }
+
+      .request-method.post {
+        color: #72a1d4;
+        background-color: rgba(114, 161, 212, 0.1);
+      }
+
+      .request-method.put {
+        color: #e0ac69;
+        background-color: rgba(224, 172, 105, 0.1);
+      }
+
+      .request-method.delete {
+        color: #e98074;
+        background-color: rgba(233, 128, 116, 0.1);
+      }
+
+      .request-method.patch {
+        color: #a3a3a3;
+        background-color: rgba(163, 163, 163, 0.1);
+      }
+
+      .request-method.options {
+        color: #d4af37;
+        background-color: rgba(212, 175, 55, 0.1);
+      }
+
+      .request-status {
+        font-weight: 600;
+        color: var(--success);
+      }
+
+      .request-domain {
+        color: var(--text-secondary);
+        font-size: 12px;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .no-logs td {
+        text-align: center;
+        color: var(--text-secondary);
+        padding: 40px 20px;
+        font-weight: 500;
+      }
+
+      .binary-content {
+        color: var(--text-secondary);
+        font-style: italic;
+        padding: 20px;
+        text-align: center;
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+      }
+
+      .no-preview {
+        color: var(--text-secondary);
+        font-style: italic;
+        padding: 20px;
+        text-align: center;
       }
 
       .logs-container {
@@ -381,6 +523,8 @@
         color: var(--text-primary);
         font-weight: 600;
         font-family: "SF Mono", "Fira Code", "Monaco", monospace;
+        word-break: break-all;
+        max-width: 400px;
       }
 
       .method-badge {
@@ -752,21 +896,6 @@
     </div>
 
     <div id="mainContent" class="content">
-      <div class="stats-bar">
-        <div class="stat-item">
-          <div class="stat-number" id="totalRequests">0</div>
-          <div class="stat-label">Total</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number" id="successfulRequests">0</div>
-          <div class="stat-label">Success</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number" id="failedRequests">0</div>
-          <div class="stat-label">Failed</div>
-        </div>
-      </div>
-
       <div class="filter-tabs">
         <button class="filter-tab active" data-filter="ALL">ALL</button>
         <button class="filter-tab" data-filter="GET">GET</button>
@@ -776,8 +905,22 @@
         <button class="filter-tab" data-filter="PATCH">PATCH</button>
       </div>
 
-      <div id="logsContainer" class="logs-container">
-        <div class="no-logs">No requests logged yet.</div>
+      <div class="table-container">
+        <table id="requestsTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Method</th>
+              <th>Status</th>
+              <th>Domain</th>
+            </tr>
+          </thead>
+          <tbody id="logsContainer">
+            <tr class="no-logs">
+              <td colspan="4">No requests logged yet.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -824,13 +967,9 @@
             <div class="info-item">
               <label>Timestamp</label><span id="detailTimestamp"></span>
             </div>
-          </div>
-        </div>
-
-        <div class="detail-section">
-          <h3>URL</h3>
-          <div class="url-container">
-            <span id="detailUrl" class="url-text"></span>
+            <div class="info-item">
+              <label>URL</label><span id="detailUrl"></span>
+            </div>
           </div>
         </div>
 

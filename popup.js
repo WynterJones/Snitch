@@ -13,7 +13,6 @@ async function initializePopup() {
 
   await loadApiKey();
   await loadLogs();
-  updateStats();
 }
 
 function setupEventListeners() {
@@ -108,7 +107,6 @@ async function loadLogs() {
   currentLogs = response.logs || [];
   filteredLogs = [...currentLogs];
   displayLogs();
-  updateStats();
 }
 
 function displayLogs() {
@@ -120,34 +118,35 @@ function displayLogs() {
 
   if (successfulLogs.length === 0) {
     container.innerHTML =
-      '<div class="no-logs">No successful requests found for the selected filter.</div>';
+      '<tr class="no-logs"><td colspan="4">No successful requests found for the selected filter.</td></tr>';
     return;
   }
 
   const recentLogs = successfulLogs.slice(-20).reverse();
-  container.innerHTML = recentLogs.map((log) => createLogItem(log)).join("");
+  container.innerHTML = recentLogs
+    .map((log) => createLogTableRow(log))
+    .join("");
 
-  const logItems = container.querySelectorAll(".log-item");
-  logItems.forEach((item, index) => {
-    item.addEventListener("click", () => showLogDetails(recentLogs[index]));
+  const logRows = container.querySelectorAll("tr:not(.no-logs)");
+  logRows.forEach((row, index) => {
+    row.addEventListener("click", () => showLogDetails(recentLogs[index]));
   });
 }
 
-function createLogItem(log) {
-  const statusClass = getStatusClass(log.status);
-  const statusText =
-    log.status >= 200 && log.status < 300 ? "Success" : "Failed";
+function createLogTableRow(log) {
+  const url = new URL(log.url);
+  const fileName = url.pathname.split("/").pop() || url.hostname;
+  const domain = url.hostname;
 
   return `
-    <div class="log-item">
-        <div class="log-group">
-            <span class="log-method ${log.method.toLowerCase()}">${
+    <tr>
+      <td class="request-name">${fileName}</td>
+      <td><span class="request-method ${log.method.toLowerCase()}">${
     log.method
-  }</span>
-            <span class="log-url">${truncateUrl(log.url)}</span>
-        </div>
-        <span class="log-status ${statusClass}">${statusText}</span>
-    </div>
+  }</span></td>
+      <td class="request-status">${log.status}</td>
+      <td class="request-domain">${domain}</td>
+    </tr>
   `;
 }
 
@@ -158,44 +157,9 @@ function getStatusClass(status) {
   return "status-error";
 }
 
-function truncateUrl(url) {
-  try {
-    const urlObj = new URL(url);
-    const hostname = urlObj.hostname;
-    const pathname = urlObj.pathname;
-
-    if (pathname.length <= 30) {
-      return hostname + pathname;
-    }
-
-    const pathStart = pathname.substring(0, 15);
-    const pathEnd = pathname.substring(pathname.length - 15);
-
-    return hostname + pathStart + "..." + pathEnd;
-  } catch {
-    if (url.length <= 50) {
-      return url;
-    }
-    return url.substring(0, 25) + "..." + url.substring(url.length - 25);
-  }
-}
-
 let filteredLogs = [];
 let currentFilter = "ALL";
 let currentDetailLog = null;
-
-function updateStats() {
-  const totalRequests = currentLogs.length;
-  const successfulRequests = currentLogs.filter(
-    (log) => log.status >= 200 && log.status < 300
-  ).length;
-  const failedRequests = totalRequests - successfulRequests;
-
-  document.getElementById("totalRequests").textContent = totalRequests;
-  document.getElementById("successfulRequests").textContent =
-    successfulRequests;
-  document.getElementById("failedRequests").textContent = failedRequests;
-}
 
 function filterLogs(method) {
   currentFilter = method;
@@ -253,11 +217,28 @@ function showLogDetails(log) {
   if (log.responseBody) {
     responseBodySection.style.display = "block";
     const responseBodyContainer = document.getElementById("detailResponseBody");
-    try {
-      const jsonData = JSON.parse(log.responseBody);
-      responseBodyContainer.innerHTML = formatJSON(jsonData);
-    } catch (e) {
-      responseBodyContainer.innerHTML = `<pre>${log.responseBody}</pre>`;
+
+    const contentType =
+      log.responseContentType || getContentTypeFromHeaders(log.responseHeaders);
+
+    if (
+      (contentType && contentType.startsWith("text/")) ||
+      (contentType && contentType.includes("javascript")) ||
+      (contentType && contentType.includes("json"))
+    ) {
+      try {
+        if (contentType.includes("json")) {
+          const jsonData = JSON.parse(log.responseBody);
+          responseBodyContainer.innerHTML = formatJSON(jsonData);
+        } else {
+          responseBodyContainer.innerHTML = `<pre>${log.responseBody}</pre>`;
+        }
+      } catch (e) {
+        responseBodyContainer.innerHTML = `<pre>${log.responseBody}</pre>`;
+      }
+    } else {
+      responseBodyContainer.innerHTML =
+        '<div class="binary-content">Binary content - see preview section below</div>';
     }
   } else {
     responseBodySection.style.display = "none";
@@ -266,7 +247,7 @@ function showLogDetails(log) {
   const previewSection = document.getElementById("previewSection");
   const previewContent = document.getElementById("previewContent");
 
-  if (log.method === "GET" && log.responseBody) {
+  if (log.responseBody) {
     previewSection.style.display = "block";
 
     const contentType =
@@ -277,40 +258,47 @@ function showLogDetails(log) {
         const uint8Array = new Uint8Array(log.responseBody);
         const blob = new Blob([uint8Array], { type: contentType });
         const imageUrl = URL.createObjectURL(blob);
-        previewContent.innerHTML = `<img src="${imageUrl}" alt="Response Image" />`;
+        previewContent.innerHTML = `<img src="${imageUrl}" alt="Response Image" style="max-width: 100%; height: auto;" />`;
       } else {
-        previewContent.innerHTML = `<img src="${log.url}" alt="Response Image" />`;
+        previewContent.innerHTML = `<img src="${log.url}" alt="Response Image" style="max-width: 100%; height: auto;" />`;
       }
     } else if (contentType && contentType.startsWith("video/")) {
       if (Array.isArray(log.responseBody)) {
         const uint8Array = new Uint8Array(log.responseBody);
         const blob = new Blob([uint8Array], { type: contentType });
         const videoUrl = URL.createObjectURL(blob);
-        previewContent.innerHTML = `<video controls><source src="${videoUrl}" type="${contentType}"></video>`;
+        previewContent.innerHTML = `<video controls style="max-width: 100%;"><source src="${videoUrl}" type="${contentType}"></video>`;
       } else {
-        previewContent.innerHTML = `<video controls><source src="${log.url}" type="${contentType}"></video>`;
+        previewContent.innerHTML = `<video controls style="max-width: 100%;"><source src="${log.url}" type="${contentType}"></video>`;
       }
     } else if (contentType && contentType.startsWith("audio/")) {
       if (Array.isArray(log.responseBody)) {
         const uint8Array = new Uint8Array(log.responseBody);
         const blob = new Blob([uint8Array], { type: contentType });
         const audioUrl = URL.createObjectURL(blob);
-        previewContent.innerHTML = `<audio controls><source src="${audioUrl}" type="${contentType}"></audio>`;
+        previewContent.innerHTML = `<audio controls style="width: 100%;"><source src="${audioUrl}" type="${contentType}"></audio>`;
       } else {
-        previewContent.innerHTML = `<audio controls><source src="${log.url}" type="${contentType}"></audio>`;
+        previewContent.innerHTML = `<audio controls style="width: 100%;"><source src="${log.url}" type="${contentType}"></audio>`;
       }
     } else if (
       contentType &&
-      (contentType.includes("json") || contentType.includes("javascript"))
+      (contentType.includes("json") ||
+        contentType.includes("javascript") ||
+        contentType.includes("text/"))
     ) {
       try {
-        const jsonData = JSON.parse(log.responseBody);
-        previewContent.innerHTML = `<pre>${formatJSON(jsonData)}</pre>`;
+        if (contentType.includes("json")) {
+          const jsonData = JSON.parse(log.responseBody);
+          previewContent.innerHTML = `<pre>${formatJSON(jsonData)}</pre>`;
+        } else {
+          previewContent.innerHTML = `<pre>${log.responseBody}</pre>`;
+        }
       } catch (e) {
         previewContent.innerHTML = `<pre>${log.responseBody}</pre>`;
       }
     } else {
-      previewContent.innerHTML = `<pre>${log.responseBody}</pre>`;
+      previewContent.innerHTML =
+        '<div class="no-preview">No preview available for this content type</div>';
     }
   } else {
     previewSection.style.display = "none";
