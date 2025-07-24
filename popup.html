@@ -303,7 +303,23 @@
 
       .request-status {
         font-weight: 600;
+        font-size: 12px;
+      }
+
+      .status-success {
         color: var(--success);
+      }
+
+      .status-error {
+        color: var(--error);
+      }
+
+      .status-pending {
+        color: var(--accent-gold);
+      }
+
+      .status-redirect {
+        color: #17a2b8;
       }
 
       .request-domain {
@@ -876,6 +892,19 @@
         </div>
       </div>
       <div class="header-toolbar">
+        <button id="debugBtn" class="toolbar-btn" title="Debug Info">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="currentColor"
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+            />
+          </svg>
+        </button>
         <button id="settingsBtn" class="toolbar-btn" title="Settings">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -909,6 +938,8 @@
     <div id="mainContent" class="content">
       <div class="filter-tabs">
         <button class="filter-tab active" data-filter="ALL">ALL</button>
+        <button class="filter-tab" data-filter="SUCCESS">SUCCESS</button>
+        <button class="filter-tab" data-filter="FAILED">FAILED</button>
         <button class="filter-tab" data-filter="GET">GET</button>
         <button class="filter-tab" data-filter="POST">POST</button>
         <button class="filter-tab" data-filter="PUT">PUT</button>

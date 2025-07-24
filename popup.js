@@ -20,6 +20,8 @@ function setupEventListeners() {
     .getElementById("settingsBtn")
     .addEventListener("click", toggleSettings);
 
+  document.getElementById("debugBtn").addEventListener("click", showDebugInfo);
+
   const filterTabs = document.querySelectorAll(".filter-tab");
   filterTabs.forEach((tab) => {
     tab.addEventListener("click", () => {
@@ -112,17 +114,13 @@ async function loadLogs() {
 function displayLogs() {
   const container = document.getElementById("logsContainer");
 
-  const successfulLogs = filteredLogs.filter(
-    (log) => log.status >= 200 && log.status < 300
-  );
-
-  if (successfulLogs.length === 0) {
+  if (filteredLogs.length === 0) {
     container.innerHTML =
-      '<tr class="no-logs"><td colspan="4">No successful requests found for the selected filter.</td></tr>';
+      '<tr class="no-logs"><td colspan="4">No requests found for the selected filter.</td></tr>';
     return;
   }
 
-  const recentLogs = successfulLogs.slice(-20).reverse();
+  const recentLogs = filteredLogs.slice(-50).reverse();
   container.innerHTML = recentLogs
     .map((log) => createLogTableRow(log))
     .join("");
@@ -138,13 +136,21 @@ function createLogTableRow(log) {
   const fileName = url.pathname.split("/").pop() || url.hostname;
   const domain = url.hostname;
 
+  const statusClass = getStatusClass(log.status);
+  const statusText =
+    log.status === "pending"
+      ? "PENDING"
+      : log.status === "error"
+      ? "ERROR"
+      : log.status;
+
   return `
     <tr>
       <td class="request-name">${fileName}</td>
       <td><span class="request-method ${log.method.toLowerCase()}">${
     log.method
   }</span></td>
-      <td class="request-status">${log.status}</td>
+      <td class="request-status ${statusClass}">${statusText}</td>
       <td class="request-domain">${domain}</td>
     </tr>
   `;
@@ -153,7 +159,11 @@ function createLogTableRow(log) {
 function getStatusClass(status) {
   if (status === "pending") return "status-pending";
   if (status === "error") return "status-error";
-  if (status >= 200 && status < 300) return "status-success";
+  if (typeof status === "number") {
+    if (status >= 200 && status < 300) return "status-success";
+    if (status >= 300 && status < 400) return "status-redirect";
+    if (status >= 400) return "status-error";
+  }
   return "status-error";
 }
 
@@ -165,6 +175,18 @@ function filterLogs(method) {
   currentFilter = method;
   if (method === "ALL") {
     filteredLogs = [...currentLogs];
+  } else if (method === "SUCCESS") {
+    filteredLogs = currentLogs.filter(
+      (log) => log.status >= 200 && log.status < 300
+    );
+  } else if (method === "FAILED") {
+    filteredLogs = currentLogs.filter(
+      (log) =>
+        (typeof log.status === "number" &&
+          (log.status < 200 || log.status >= 300)) ||
+        log.status === "error" ||
+        log.status === "pending"
+    );
   } else {
     filteredLogs = currentLogs.filter((log) => log.method === method);
   }
@@ -181,6 +203,9 @@ function showLogDetails(log) {
 
   document.getElementById("mainContent").style.display = "none";
   document.getElementById("detailContent").style.display = "block";
+
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
 
   document.getElementById("detailTitle").textContent = `${log.method} Request`;
 
@@ -471,6 +496,43 @@ async function analyzeCurrentRequest() {
     analyzeBtn.disabled = false;
     analyzeBtn.querySelector("span").textContent = "Analyze with AI";
   }
+}
+
+async function showDebugInfo() {
+  const response = await chrome.runtime.sendMessage({
+    action: "getDebugInfo",
+    tabId: currentTabId,
+  });
+
+  const info = response.debugInfo;
+  const debugText = `Debug Info for Current Tab:
+
+Total Requests: ${info.totalRequests}
+
+By Status:
+- Success (2xx): ${info.byStatus.success}
+- Redirect (3xx): ${info.byStatus.redirect}  
+- Error (4xx/5xx): ${info.byStatus.error}
+- Pending: ${info.byStatus.pending}
+
+By Method:
+- GET: ${info.byMethod.GET}
+- POST: ${info.byMethod.POST}
+- PUT: ${info.byMethod.PUT}
+- DELETE: ${info.byMethod.DELETE}
+- PATCH: ${info.byMethod.PATCH}
+- OPTIONS: ${info.byMethod.OPTIONS}
+- HEAD: ${info.byMethod.HEAD}
+
+By Type:
+${Object.entries(info.byType)
+  .map(([type, count]) => `- ${type}: ${count}`)
+  .join("\n")}
+
+Current Filter: ${currentFilter}
+Displayed Requests: ${filteredLogs.length}`;
+
+  alert(debugText);
 }
 
 function showNotification(message) {

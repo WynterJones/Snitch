@@ -29,9 +29,11 @@ chrome.webRequest.onBeforeRequest.addListener(
       responseBody: null,
       tabId: tabId,
       status: "pending",
+      initiator: details.initiator,
+      frameId: details.frameId,
     };
 
-    if (details.method === "POST" || details.method === "PUT") {
+    if (["POST", "PUT", "PATCH"].includes(details.method)) {
       if (details.requestBody) {
         if (details.requestBody.formData) {
           log.requestBody = details.requestBody.formData;
@@ -55,7 +57,24 @@ chrome.webRequest.onBeforeRequest.addListener(
     updateBadge(tabId);
     saveLogs();
   },
-  { urls: ["<all_urls>"] },
+  {
+    urls: ["<all_urls>"],
+    types: [
+      "main_frame",
+      "sub_frame",
+      "stylesheet",
+      "script",
+      "image",
+      "font",
+      "object",
+      "xmlhttprequest",
+      "ping",
+      "csp_report",
+      "media",
+      "websocket",
+      "other",
+    ],
+  },
   ["requestBody"]
 );
 
@@ -86,7 +105,24 @@ chrome.webRequest.onCompleted.addListener(
       saveLogs();
     }
   },
-  { urls: ["<all_urls>"] },
+  {
+    urls: ["<all_urls>"],
+    types: [
+      "main_frame",
+      "sub_frame",
+      "stylesheet",
+      "script",
+      "image",
+      "font",
+      "object",
+      "xmlhttprequest",
+      "ping",
+      "csp_report",
+      "media",
+      "websocket",
+      "other",
+    ],
+  },
   ["responseHeaders"]
 );
 
@@ -111,7 +147,24 @@ chrome.webRequest.onErrorOccurred.addListener(
       saveLogs();
     }
   },
-  { urls: ["<all_urls>"] }
+  {
+    urls: ["<all_urls>"],
+    types: [
+      "main_frame",
+      "sub_frame",
+      "stylesheet",
+      "script",
+      "image",
+      "font",
+      "object",
+      "xmlhttprequest",
+      "ping",
+      "csp_report",
+      "media",
+      "websocket",
+      "other",
+    ],
+  }
 );
 
 function shouldFetchResponseBody(details) {
@@ -167,10 +220,7 @@ async function fetchResponseBody(url, tabId, logEntry) {
 
 function updateBadge(tabId) {
   const allRequests = requestLogs[tabId] || [];
-  const successfulRequests = allRequests.filter(
-    (request) => request.status >= 200 && request.status < 300
-  );
-  const count = successfulRequests.length;
+  const count = allRequests.length;
 
   chrome.action.setBadgeText({ text: count.toString(), tabId: tabId });
   chrome.action.setBadgeBackgroundColor({ color: "#4CAF50", tabId: tabId });
@@ -184,6 +234,45 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "getLogs") {
     const tabId = request.tabId || sender.tab?.id;
     sendResponse({ logs: requestLogs[tabId] || [] });
+  } else if (request.action === "getDebugInfo") {
+    const tabId = request.tabId || sender.tab?.id;
+    const logs = requestLogs[tabId] || [];
+    const debugInfo = {
+      totalRequests: logs.length,
+      byStatus: {
+        pending: logs.filter((l) => l.status === "pending").length,
+        success: logs.filter(
+          (l) =>
+            typeof l.status === "number" && l.status >= 200 && l.status < 300
+        ).length,
+        redirect: logs.filter(
+          (l) =>
+            typeof l.status === "number" && l.status >= 300 && l.status < 400
+        ).length,
+        error: logs.filter(
+          (l) =>
+            (typeof l.status === "number" && l.status >= 400) ||
+            l.status === "error"
+        ).length,
+      },
+      byMethod: {
+        GET: logs.filter((l) => l.method === "GET").length,
+        POST: logs.filter((l) => l.method === "POST").length,
+        PUT: logs.filter((l) => l.method === "PUT").length,
+        DELETE: logs.filter((l) => l.method === "DELETE").length,
+        PATCH: logs.filter((l) => l.method === "PATCH").length,
+        OPTIONS: logs.filter((l) => l.method === "OPTIONS").length,
+        HEAD: logs.filter((l) => l.method === "HEAD").length,
+      },
+      byType: {},
+    };
+
+    const types = [...new Set(logs.map((l) => l.type))];
+    types.forEach((type) => {
+      debugInfo.byType[type] = logs.filter((l) => l.type === type).length;
+    });
+
+    sendResponse({ debugInfo });
   } else if (request.type === "SENATOR_RESPONSE") {
     const tabId = sender.tab?.id;
     if (tabId && requestLogs[tabId]) {
