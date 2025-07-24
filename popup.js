@@ -198,7 +198,9 @@ function showLogDetails(log) {
   document.getElementById("detailTimestamp").textContent = new Date(
     log.timestamp
   ).toLocaleString();
-  document.getElementById("detailUrl").textContent = log.url;
+  document.getElementById(
+    "detailUrl"
+  ).innerHTML = `<a href="${log.url}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-gold); text-decoration: none;">${log.url}</a>`;
 
   const requestBodySection = document.getElementById("requestBodySection");
   if (log.requestBody) {
