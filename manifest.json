@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Snitch",
   "version": "1.0.0",
-  "description": "Network interception viewer and logger for non-devs with AI capabilities",
+  "description": "Web Network interception viewer and logger with OpenAI helper anaylsis.",
   "permissions": ["webRequest", "storage", "tabs"],
   "host_permissions": ["<all_urls>"],
   "background": {

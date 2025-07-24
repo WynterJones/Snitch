@@ -17,7 +17,6 @@ async function initializePopup() {
 }
 
 function setupEventListeners() {
-  document.getElementById("saveApiKey").addEventListener("click", saveApiKey);
   document
     .getElementById("settingsBtn")
     .addEventListener("click", toggleSettings);
@@ -34,24 +33,8 @@ function setupEventListeners() {
   document.getElementById("backBtn").addEventListener("click", showMainView);
 
   document
-    .getElementById("copyRequestBodyBtn")
-    .addEventListener("click", () =>
-      copyToClipboard(JSON.stringify(currentDetailLog.requestBody, null, 2))
-    );
-  document
-    .getElementById("copyHeadersBtn")
-    .addEventListener("click", () =>
-      copyToClipboard(JSON.stringify(currentDetailLog.responseHeaders, null, 2))
-    );
-  document
     .getElementById("analyzeBtn")
     .addEventListener("click", analyzeCurrentRequest);
-
-  document.getElementById("apiKeyInput").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      saveApiKey();
-    }
-  });
 
   document
     .getElementById("fullscreenBtn")

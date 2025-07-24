@@ -1,4 +1,4 @@
-# Senator - Network Interception & AI Analysis
+# Snitch - Web Network Interception & AI Analysis
 
 ## Short Description
 Monitor network requests in real-time with AI-powered explanations. Perfect for non-technical users who want to understand what's happening behind the scenes on websites.
