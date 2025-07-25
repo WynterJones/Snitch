@@ -74,76 +74,17 @@
         align-items: center;
       }
 
-      .capture-toggle {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-right: 10px;
-      }
-
-      .capture-label {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text-secondary);
-      }
-
-      .switch {
-        position: relative;
-        display: inline-block;
-        width: 44px;
-        height: 24px;
-      }
-
-      .switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-      }
-
-      .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: var(--bg-tertiary);
-        -webkit-transition: 0.4s;
-        transition: 0.4s;
-      }
-
-      .slider:before {
-        position: absolute;
-        content: "";
-        height: 18px;
-        width: 18px;
-        left: 3px;
-        bottom: 3px;
-        background-color: white;
-        -webkit-transition: 0.4s;
-        transition: 0.4s;
-      }
-
-      input:checked + .slider {
+      .capture-btn {
         background-color: var(--accent-gold);
+        border-color: var(--accent-gold);
+        color: var(--bg-main);
       }
 
-      input:focus + .slider {
-        box-shadow: 0 0 1px var(--accent-gold);
-      }
-
-      input:checked + .slider:before {
-        -webkit-transform: translateX(20px);
-        -ms-transform: translateX(20px);
-        transform: translateX(20px);
-      }
-
-      .slider.round {
-        border-radius: 24px;
-      }
-
-      .slider.round:before {
-        border-radius: 50%;
+      .capture-btn:hover {
+        background-color: #eac655;
+        border-color: #eac655;
+        color: var(--bg-main);
+        transform: translateY(-1px);
       }
 
       .toolbar-btn {
@@ -254,7 +195,7 @@
 
       .filter-tabs {
         display: flex;
-        gap: 6px;
+        gap: 5px;
         margin-bottom: 20px;
         justify-content: center;
       }
@@ -1025,13 +966,23 @@
             />
           </svg>
         </button>
-        <div class="capture-toggle">
-          <label for="captureSwitch" class="capture-label">Capture</label>
-          <label class="switch">
-            <input type="checkbox" id="captureSwitch" />
-            <span class="slider round"></span>
-          </label>
-        </div>
+        <button
+          id="startCaptureBtn"
+          class="toolbar-btn capture-btn"
+          title="Start Capturing"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="currentColor"
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+            />
+          </svg>
+        </button>
         <button id="settingsBtn" class="toolbar-btn" title="Settings">
           <svg
             xmlns="http://www.w3.org/2000/svg"

@@ -20,7 +20,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["interceptor.js"],
+      "resources": ["interceptor.js", "badge.html"],
       "matches": ["<all_urls>"]
     }
   ],

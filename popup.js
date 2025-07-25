@@ -11,33 +11,54 @@ async function initializePopup() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTabId = tab.id;
 
-  const captureSwitch = document.getElementById("captureSwitch");
+  const startCaptureBtn = document.getElementById("startCaptureBtn");
   const isCapturing = await chrome.runtime.sendMessage({
     action: "getCaptureState",
     tabId: currentTabId,
   });
-  captureSwitch.checked = isCapturing;
 
-  captureSwitch.addEventListener("change", (event) => {
-    const isChecked = event.target.checked;
-    chrome.runtime.sendMessage({
-      action: "setCaptureState",
+  updateCaptureButton(isCapturing);
+
+  startCaptureBtn.addEventListener("click", async () => {
+    const currentState = await chrome.runtime.sendMessage({
+      action: "getCaptureState",
       tabId: currentTabId,
-      isCapturing: isChecked,
     });
-    if (isChecked) {
-      loadLogs();
+
+    if (!currentState) {
+      await chrome.tabs.sendMessage(currentTabId, { action: "showBadge" });
     }
   });
 
   chrome.runtime.onMessage.addListener((request) => {
     if (request.action === "updateLogs") {
       loadLogs();
+    } else if (request.action === "captureStateChanged") {
+      updateCaptureButton(request.isCapturing);
+      if (request.isCapturing) {
+        loadLogs();
+      }
     }
   });
 
   await loadSettings();
   await loadLogs();
+}
+
+function updateCaptureButton(isCapturing) {
+  const startCaptureBtn = document.getElementById("startCaptureBtn");
+
+  if (isCapturing) {
+    startCaptureBtn.title = "Already Capturing";
+    startCaptureBtn.style.opacity = "0.6";
+    startCaptureBtn.style.cursor = "not-allowed";
+    startCaptureBtn.disabled = true;
+  } else {
+    startCaptureBtn.title = "Start Capturing";
+    startCaptureBtn.style.opacity = "1";
+    startCaptureBtn.style.cursor = "pointer";
+    startCaptureBtn.disabled = false;
+  }
 }
 
 async function loadSettings() {

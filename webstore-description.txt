@@ -1,32 +1,42 @@
-# Snitch - Web Network Interception & AI Analysis
+# Snitch - Web Network Inspector with AI Analysis
 
 ## Short Description
-Monitor network requests in real-time with AI-powered explanations. Perfect for non-technical users who want to understand what's happening behind the scenes on websites.
+Click to capture network requests with a visual badge overlay, then view detailed logs with AI-powered explanations. Perfect for understanding what websites are doing behind the scenes.
 
 ## Detailed Description
 
-🔍 **See What's Happening Behind the Scenes**
+🔍 **Visual Network Monitoring Made Simple**
 
-Senator is a powerful Chrome extension that monitors all network requests in real-time, giving you unprecedented visibility into what's happening when you browse websites. Unlike complex developer tools, Senator is designed for non-technical users who want to understand web activity without diving into technical details.
+Snitch transforms network monitoring with an intuitive click-to-capture approach. Simply click the capture button in the extension popup, and a sleek badge appears on your page showing "Capturing logs..." - making it crystal clear when monitoring is active. Unlike hidden background tools, Snitch puts you in complete control with visual feedback.
 
-🤖 **AI-Powered Intelligence**
+**How It Works:**
+1. Click the Snitch extension icon
+2. Press the "Start Capturing" button 
+3. A beautiful badge appears on your page with the Snitch logo
+4. Browse normally while the badge captures all network activity
+5. Click the X on the badge to stop capturing anytime
+6. Return to the popup to view detailed request logs
 
-The magic happens with our OpenAI integration. Simply click "Explain with AI" on any request, and Senator will provide a clear, plain-English explanation of:
-• What the request does
-• Why it was made
-• Any potential issues or interesting aspects
-• What the response status means
+🤖 **AI-Powered Request Analysis**
 
-No technical knowledge required - just intelligent insights that make sense.
+The magic happens with our OpenAI integration. Add your API key in settings, then click "Analyze with AI" on any captured request for instant plain-English explanations:
+• What the request does and why it was made
+• What the response data means
+• Potential security or privacy implications  
+• Technical insights made simple
 
-📊 **Comprehensive Monitoring**
+No coding knowledge required - just intelligent insights that make web traffic understandable.
 
-Senator captures everything:
-• All HTTP requests (GET, POST, PUT, DELETE, etc.)
-• Request headers and body data
-• Response status codes and headers
-• Timestamps and tab information
-• Request types (API calls, resources, scripts, etc.)
+📊 **Smart Request Capture**
+
+When the badge is active, Snitch intelligently captures:
+• All HTTP requests (GET, POST, PUT, DELETE, PATCH, etc.)
+• Request/response headers and body content
+• Status codes with success/error indicators
+• Timestamps and detailed request information
+• Automatic categorization (API calls, media, scripts, etc.)
+• **Kept Domains**: Prioritize important domains that never get cleared
+• Real-time filtering by method, status, or content type
 
 🎯 **Perfect For**
 
@@ -38,12 +48,13 @@ Senator captures everything:
 
 🚀 **Key Features**
 
-• **Real-time Monitoring**: See requests as they happen
-• **Smart Statistics**: Track total requests and success rates
-• **Settings Panel**: Easy access to configuration with gear icon
-• **Request Details**: Clean modal view with formatted JSON
-• **Badge Counters**: Visual indicators of request activity
-• **Clean Interface**: Modern, intuitive design
+• **Visual Badge Overlay**: Beautiful on-page indicator showing capture status
+• **Click-to-Start**: No automatic background monitoring - you're in control
+• **Smart Log Management**: Keep important domains while auto-cleaning others
+• **Settings Panel**: Configure OpenAI API key and kept domains with gear icon
+• **Detailed Request View**: Click any request for full headers, body, and preview
+• **AI Analysis Button**: One-click explanations for complex requests
+• **Modern Interface**: Clean design with filter tabs and real-time stats
 
 🔒 **Privacy & Security**
 
@@ -55,11 +66,12 @@ Senator captures everything:
 ⚡ **Easy Setup**
 
 1. Install the extension
-2. Add your OpenAI API key (get one free at platform.openai.com)
-3. Start browsing - Senator automatically captures requests
-4. Click the extension icon to view logs
-5. Click on any request to see detailed information
-6. Use the gear icon (⚙️) to access settings
+2. Click the Snitch icon and press "Start Capturing" 
+3. A badge appears on your page - browse normally while it captures
+4. Return to the popup anytime to view captured requests
+5. Click the gear icon (⚙️) to add your OpenAI API key and configure kept domains
+6. Click any request for detailed analysis, including AI explanations
+7. Close the badge when you're done monitoring
 
 🎨 **Beautiful Interface**
 
@@ -71,11 +83,12 @@ Senator captures everything:
 
 📈 **Use Cases**
 
-• **E-commerce**: Monitor what data shopping sites collect
-• **Social Media**: See tracking and analytics requests
-• **News Sites**: Understand content delivery and ads
-• **Banking**: Verify secure communication (without sensitive data)
-• **Learning**: Educational tool for web technology
+• **Privacy Auditing**: Activate the badge to see what data websites collect and share
+• **Development Learning**: Watch API calls and responses in real-time with AI explanations  
+• **Security Research**: Monitor authentication flows and security headers
+• **Business Analysis**: Track third-party integrations and service dependencies
+• **Kept Domains**: Focus on specific APIs or services by keeping their requests permanent
+• **Educational**: Perfect for students learning about web technologies and HTTP
 
 🛠 **Technical Details**
 
@@ -87,10 +100,12 @@ Senator captures everything:
 
 💡 **Pro Tips**
 
-• Click on requests to view detailed information with formatted JSON
-• Clear logs regularly to maintain performance
-• Get AI explanations for complex requests
-• Monitor different types of websites to learn patterns
+• Use the visual badge to know exactly when monitoring is active
+• Configure "Kept Domains" in settings to permanently save important API requests
+• Filter by method (GET, POST, etc.) or status (SUCCESS, FAILED) for focused analysis
+• Click "Analyze with AI" on complex requests for instant explanations
+• The badge auto-closes when you navigate away - reactivate as needed
+• Clear logs regularly while keeping your important kept domain requests
 
 🔧 **Support**
 
@@ -99,7 +114,7 @@ Senator captures everything:
 • Regular updates and improvements
 • Community support available
 
-Transform your browsing experience with Senator - the intelligent network monitor that makes web technology accessible to everyone.
+Transform your browsing experience with Snitch - the intelligent network monitor that makes web technology accessible to everyone.
 
 ---
 

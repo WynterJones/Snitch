@@ -330,11 +330,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "getLogs") {
       sendResponse({ logs: state.requestLogs[request.tabId] || [] });
     } else if (request.action === "setCaptureState") {
-      state.tabCaptureState[request.tabId] = request.isCapturing;
-      if (!request.isCapturing) {
-        chrome.action.setBadgeText({ text: "", tabId: request.tabId });
+      const tabId = request.tabId || sender.tab?.id;
+      if (tabId) {
+        state.tabCaptureState[tabId] = request.isCapturing;
+        if (!request.isCapturing) {
+          chrome.action.setBadgeText({ text: "", tabId: tabId });
+        }
+        await setState({ tabCaptureState: state.tabCaptureState });
+
+        chrome.runtime
+          .sendMessage({
+            action: "captureStateChanged",
+            isCapturing: request.isCapturing,
+            tabId: tabId,
+          })
+          .catch(() => {});
       }
-      await setState({ tabCaptureState: state.tabCaptureState });
       sendResponse({ success: true });
     } else if (request.action === "getCaptureState") {
       sendResponse(state.tabCaptureState[request.tabId] || false);

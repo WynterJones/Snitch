@@ -4,28 +4,28 @@ A powerful Chrome extension for network request interception, logging, and AI-po
 
 ## Features
 
-### 🔍 Network Monitoring
+### Network Monitoring
 
 - **Real-time Request Logging**: Captures all network requests in real-time
 - **Request Details**: Method, URL, headers, request body, and response data
 - **Status Tracking**: Monitors request success/failure with visual indicators
 - **Tab-based Organization**: Separate logs for each browser tab
 
-### 🤖 AI-Powered Analysis
+### AI-Powered Analysis
 
 - **OpenAI Integration**: Uses GPT-3.5-turbo for intelligent request analysis
 - **Plain English Explanations**: Converts technical network data into understandable insights
 - **Context-Aware Analysis**: Explains what each request does and why it matters
 - **Non-Technical Friendly**: Designed for users without technical background
 
-### 🎨 User Interface
+### User Interface
 
 - **Modern Popup Interface**: Clean, intuitive popup with statistics and controls
 - **Settings Panel**: Collapsible settings panel with gear icon
 - **Request Detail Modal**: Clean modal view for request details with formatted JSON
 - **Badge Counters**: Visual indicators showing request activity per tab
 
-### 📊 Data Management
+### Data Management
 
 - **Clear Logs**: Easy cleanup of captured data
 - **Statistics Dashboard**: Real-time metrics and request counts
@@ -38,12 +38,12 @@ A powerful Chrome extension for network request interception, logging, and AI-po
 1. Clone or download this repository
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" in the top right
-4. Click "Load unpacked" and select the Senator folder
+4. Click "Load unpacked" and select the Snitch folder
 5. The extension icon should appear in your toolbar
 
 ### Chrome Web Store (Coming Soon)
 
-- Search for "Senator Network Logger" in the Chrome Web Store
+- Search for "Snitch Network Logger" in the Chrome Web Store
 - Click "Add to Chrome" to install
 
 ## Setup
@@ -51,7 +51,7 @@ A powerful Chrome extension for network request interception, logging, and AI-po
 ### OpenAI API Key Configuration
 
 1. Get an OpenAI API key from [OpenAI Platform](https://platform.openai.com/api-keys)
-2. Click the Senator extension icon in your toolbar
+2. Click the Snitch extension icon in your toolbar
 3. Enter your API key in the "OpenAI API Key" field
 4. Click "Save API Key"
 
@@ -59,8 +59,8 @@ A powerful Chrome extension for network request interception, logging, and AI-po
 
 ### Basic Monitoring
 
-1. **Start Monitoring**: Simply browse any website - Senator automatically captures network requests
-2. **View Logs**: Click the Senator icon to see recent requests in the popup
+1. **Start Monitoring**: Simply browse any website - Snitch automatically captures network requests
+2. **View Logs**: Click the Snitch icon to see recent requests in the popup
 3. **View Details**: Click on any request to see detailed information in a clean modal
 4. **Settings**: Click the gear icon (⚙️) to access settings and API key configuration
 
@@ -150,7 +150,7 @@ A powerful Chrome extension for network request interception, logging, and AI-po
 ### Project Structure
 
 ```
-Senator/
+Snitch/
 ├── manifest.json          # Extension configuration
 ├── background.js          # Service worker for request interception
 ├── popup.html            # Popup interface
