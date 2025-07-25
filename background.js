@@ -1,21 +1,51 @@
-let requestLogs = {};
-let openaiApiKey = "";
+const STATE_KEYS = [
+  "requestLogs",
+  "tabCaptureState",
+  "keptDomains",
+  "openaiApiKey",
+];
+const MAX_LOGS = 50;
+const MAX_BODY_SIZE_BYTES = 100 * 1024; // 100KB
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.get(["openaiApiKey"], (result) => {
-    if (result.openaiApiKey) {
-      openaiApiKey = result.openaiApiKey;
+async function getState() {
+  const result = await chrome.storage.local.get(STATE_KEYS);
+  return {
+    requestLogs: result.requestLogs || {},
+    tabCaptureState: result.tabCaptureState || {},
+    keptDomains: result.keptDomains || [],
+    openaiApiKey: result.openaiApiKey || "",
+  };
+}
+
+async function setState(newState) {
+  const stateToSave = {};
+  for (const key of STATE_KEYS) {
+    if (newState[key] !== undefined) {
+      stateToSave[key] = newState[key];
     }
+  }
+  await chrome.storage.local.set(stateToSave);
+}
+
+chrome.tabs.onRemoved.addListener(async (tabId) => {
+  const state = await getState();
+  delete state.tabCaptureState[tabId];
+  delete state.requestLogs[tabId];
+  await setState({
+    tabCaptureState: state.tabCaptureState,
+    requestLogs: state.requestLogs,
   });
 });
 
 chrome.webRequest.onBeforeRequest.addListener(
-  (details) => {
+  async (details) => {
+    const state = await getState();
+    if (!state.tabCaptureState[details.tabId]) return;
+
     const tabId = details.tabId;
     if (tabId === -1) return;
-
-    if (!requestLogs[tabId]) {
-      requestLogs[tabId] = [];
+    if (!state.requestLogs[tabId]) {
+      state.requestLogs[tabId] = [];
     }
 
     const log = {
@@ -53,9 +83,29 @@ chrome.webRequest.onBeforeRequest.addListener(
       }
     }
 
-    requestLogs[tabId].push(log);
-    updateBadge(tabId);
-    saveLogs();
+    state.requestLogs[tabId].push(log);
+
+    const keptLogs = [];
+    const otherLogs = [];
+
+    state.requestLogs[tabId].forEach((l) => {
+      const domain = new URL(l.url).hostname;
+      if (state.keptDomains.some((kd) => domain.includes(kd))) {
+        keptLogs.push(l);
+      } else {
+        otherLogs.push(l);
+      }
+    });
+
+    if (otherLogs.length > MAX_LOGS) {
+      const trimmedOtherLogs = otherLogs.slice(otherLogs.length - MAX_LOGS);
+      state.requestLogs[tabId] = [...keptLogs, ...trimmedOtherLogs].sort(
+        (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+      );
+    }
+
+    updateBadge(tabId, state.requestLogs);
+    await saveLogs(state.requestLogs);
   },
   {
     urls: ["<all_urls>"],
@@ -79,11 +129,14 @@ chrome.webRequest.onBeforeRequest.addListener(
 );
 
 chrome.webRequest.onCompleted.addListener(
-  (details) => {
-    const tabId = details.tabId;
-    if (tabId === -1 || !requestLogs[tabId]) return;
+  async (details) => {
+    const state = await getState();
+    if (!state.tabCaptureState[details.tabId]) return;
 
-    const request = requestLogs[tabId].find(
+    const tabId = details.tabId;
+    if (tabId === -1 || !state.requestLogs[tabId]) return;
+
+    const request = state.requestLogs[tabId].find(
       (r) =>
         r.requestId === details.requestId ||
         (r.url === details.url &&
@@ -98,11 +151,11 @@ chrome.webRequest.onCompleted.addListener(
       request.completed = true;
 
       if (details.fromCache || shouldFetchResponseBody(details)) {
-        fetchResponseBody(details.url, tabId, request);
+        await fetchResponseBody(details.url, tabId, request);
       }
 
-      updateBadge(tabId);
-      saveLogs();
+      updateBadge(tabId, state.requestLogs);
+      await saveLogs(state.requestLogs);
     }
   },
   {
@@ -127,11 +180,14 @@ chrome.webRequest.onCompleted.addListener(
 );
 
 chrome.webRequest.onErrorOccurred.addListener(
-  (details) => {
-    const tabId = details.tabId;
-    if (tabId === -1 || !requestLogs[tabId]) return;
+  async (details) => {
+    const state = await getState();
+    if (!state.tabCaptureState[details.tabId]) return;
 
-    const request = requestLogs[tabId].find(
+    const tabId = details.tabId;
+    if (tabId === -1 || !state.requestLogs[tabId]) return;
+
+    const request = state.requestLogs[tabId].find(
       (r) =>
         r.requestId === details.requestId ||
         (r.url === details.url &&
@@ -143,8 +199,8 @@ chrome.webRequest.onErrorOccurred.addListener(
       request.error = details.error;
       request.completed = true;
 
-      updateBadge(tabId);
-      saveLogs();
+      updateBadge(tabId, state.requestLogs);
+      await saveLogs(state.requestLogs);
     }
   },
   {
@@ -212,104 +268,124 @@ async function fetchResponseBody(url, tabId, logEntry) {
 
     logEntry.responseBody = body;
     logEntry.responseContentType = contentType;
-    saveLogs();
+
+    const state = await getState();
+    await saveLogs(state.requestLogs);
   } catch (error) {
     console.log("Could not fetch response body for:", url, error.message);
   }
 }
 
-function updateBadge(tabId) {
+function updateBadge(tabId, requestLogs) {
   const allRequests = requestLogs[tabId] || [];
   const count = allRequests.length;
 
   chrome.action.setBadgeText({ text: count.toString(), tabId: tabId });
   chrome.action.setBadgeBackgroundColor({ color: "#4CAF50", tabId: tabId });
+
+  chrome.runtime.sendMessage({ action: "updateLogs" }).catch((e) => {});
 }
 
-function saveLogs() {
-  chrome.storage.local.set({ requestLogs: requestLogs });
+async function saveLogs(requestLogs) {
+  const logsToSave = JSON.parse(JSON.stringify(requestLogs));
+
+  for (const tabId in logsToSave) {
+    logsToSave[tabId].forEach((log) => {
+      if (log.responseBody) {
+        if (
+          typeof log.responseBody === "object" &&
+          Array.isArray(log.responseBody)
+        ) {
+          log.responseBody = null; // Don't save binary data
+          return;
+        }
+
+        const contentType = log.responseContentType || "";
+        if (
+          contentType.startsWith("image/") ||
+          contentType.startsWith("video/") ||
+          contentType.startsWith("audio/")
+        ) {
+          log.responseBody = null; // Don't save binary data
+          return;
+        }
+
+        if (
+          typeof log.responseBody === "string" &&
+          log.responseBody.length > MAX_BODY_SIZE_BYTES
+        ) {
+          log.responseBody = log.responseBody.substring(0, MAX_BODY_SIZE_BYTES);
+          log.isTruncated = true;
+        }
+      }
+    });
+  }
+
+  await setState({ requestLogs: logsToSave });
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "getLogs") {
-    const tabId = request.tabId || sender.tab?.id;
-    sendResponse({ logs: requestLogs[tabId] || [] });
-  } else if (request.action === "getDebugInfo") {
-    const tabId = request.tabId || sender.tab?.id;
-    const logs = requestLogs[tabId] || [];
-    const debugInfo = {
-      totalRequests: logs.length,
-      byStatus: {
-        pending: logs.filter((l) => l.status === "pending").length,
-        success: logs.filter(
-          (l) =>
-            typeof l.status === "number" && l.status >= 200 && l.status < 300
-        ).length,
-        redirect: logs.filter(
-          (l) =>
-            typeof l.status === "number" && l.status >= 300 && l.status < 400
-        ).length,
-        error: logs.filter(
-          (l) =>
-            (typeof l.status === "number" && l.status >= 400) ||
-            l.status === "error"
-        ).length,
-      },
-      byMethod: {
-        GET: logs.filter((l) => l.method === "GET").length,
-        POST: logs.filter((l) => l.method === "POST").length,
-        PUT: logs.filter((l) => l.method === "PUT").length,
-        DELETE: logs.filter((l) => l.method === "DELETE").length,
-        PATCH: logs.filter((l) => l.method === "PATCH").length,
-        OPTIONS: logs.filter((l) => l.method === "OPTIONS").length,
-        HEAD: logs.filter((l) => l.method === "HEAD").length,
-      },
-      byType: {},
-    };
-
-    const types = [...new Set(logs.map((l) => l.type))];
-    types.forEach((type) => {
-      debugInfo.byType[type] = logs.filter((l) => l.type === type).length;
-    });
-
-    sendResponse({ debugInfo });
-  } else if (request.type === "SENATOR_RESPONSE") {
-    const tabId = sender.tab?.id;
-    if (tabId && requestLogs[tabId]) {
-      const log = requestLogs[tabId].find(
-        (r) =>
-          r.url === request.payload.url &&
-          (!r.responseBody || r.responseBody === null) &&
-          Math.abs(new Date(r.timestamp).getTime() - Date.now()) < 30000
-      );
-      if (log) {
-        log.responseBody = request.payload.body;
-        log.responseType = request.payload.type;
-        log.responseContentType =
-          request.payload.contentType ||
-          request.payload.headers["content-type"];
-        saveLogs();
+  (async () => {
+    const state = await getState();
+    if (request.action === "getLogs") {
+      sendResponse({ logs: state.requestLogs[request.tabId] || [] });
+    } else if (request.action === "setCaptureState") {
+      state.tabCaptureState[request.tabId] = request.isCapturing;
+      if (!request.isCapturing) {
+        chrome.action.setBadgeText({ text: "", tabId: request.tabId });
       }
+      await setState({ tabCaptureState: state.tabCaptureState });
+      sendResponse({ success: true });
+    } else if (request.action === "getCaptureState") {
+      sendResponse(state.tabCaptureState[request.tabId] || false);
+    } else if (request.action === "getKeptDomains") {
+      sendResponse(state.keptDomains);
+    } else if (request.action === "setKeptDomains") {
+      state.keptDomains = request.domains;
+      await setState({ keptDomains: state.keptDomains });
+      sendResponse({ success: true });
+    } else if (request.type === "SENATOR_RESPONSE") {
+      const tabId = sender.tab?.id;
+      if (tabId && state.tabCaptureState[tabId] && state.requestLogs[tabId]) {
+        const log = state.requestLogs[tabId].find(
+          (r) =>
+            r.url === request.payload.url &&
+            (!r.responseBody || r.responseBody === null) &&
+            Math.abs(new Date(r.timestamp).getTime() - Date.now()) < 30000
+        );
+        if (log) {
+          log.responseBody = request.payload.body;
+          log.responseType = request.payload.type;
+          log.responseContentType =
+            request.payload.contentType ||
+            request.payload.headers["content-type"];
+          await saveLogs(state.requestLogs);
+        }
+      }
+    } else if (request.action === "clearLogs") {
+      const tabId = request.tabId || sender.tab?.id;
+      if (tabId && state.requestLogs[tabId]) {
+        state.requestLogs[tabId] = [];
+      }
+      await saveLogs(state.requestLogs);
+      chrome.action.setBadgeText({ text: "", tabId: tabId });
+      sendResponse({ success: true });
+    } else if (request.action === "setApiKey") {
+      state.openaiApiKey = request.apiKey;
+      await setState({ openaiApiKey: state.openaiApiKey });
+      sendResponse({ success: true });
+    } else if (request.action === "getApiKey") {
+      sendResponse({ apiKey: state.openaiApiKey });
+    } else if (request.action === "explainRequest") {
+      explainRequest(request.requestData, state.openaiApiKey).then(
+        sendResponse
+      );
     }
-  } else if (request.action === "clearLogs") {
-    const tabId = request.tabId || sender.tab?.id;
-    if (tabId) {
-      delete requestLogs[tabId];
-      saveLogs();
-    }
-  } else if (request.action === "setApiKey") {
-    openaiApiKey = request.apiKey;
-    chrome.storage.local.set({ openaiApiKey: request.apiKey });
-    sendResponse({ success: true });
-  } else if (request.action === "getApiKey") {
-    sendResponse({ apiKey: openaiApiKey });
-  } else if (request.action === "explainRequest") {
-    explainRequest(request.requestData).then(sendResponse);
-    return true;
-  }
+  })();
+  return true;
 });
 
-async function explainRequest(requestData) {
+async function explainRequest(requestData, openaiApiKey) {
   if (!openaiApiKey) {
     return { error: "OpenAI API key not set" };
   }
@@ -369,17 +445,3 @@ function getContentTypeFromUrl(url) {
   }
   return null;
 }
-
-chrome.tabs.onRemoved.addListener((tabId) => {
-  delete requestLogs[tabId];
-  saveLogs();
-});
-
-chrome.storage.local.get(["requestLogs", "openaiApiKey"], (result) => {
-  if (result.requestLogs) {
-    requestLogs = result.requestLogs;
-  }
-  if (result.openaiApiKey) {
-    openaiApiKey = result.openaiApiKey;
-  }
-});

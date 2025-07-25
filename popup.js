@@ -11,8 +11,38 @@ async function initializePopup() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTabId = tab.id;
 
-  await loadApiKey();
+  const captureSwitch = document.getElementById("captureSwitch");
+  const isCapturing = await chrome.runtime.sendMessage({
+    action: "getCaptureState",
+    tabId: currentTabId,
+  });
+  captureSwitch.checked = isCapturing;
+
+  captureSwitch.addEventListener("change", (event) => {
+    const isChecked = event.target.checked;
+    chrome.runtime.sendMessage({
+      action: "setCaptureState",
+      tabId: currentTabId,
+      isCapturing: isChecked,
+    });
+    if (isChecked) {
+      loadLogs();
+    }
+  });
+
+  chrome.runtime.onMessage.addListener((request) => {
+    if (request.action === "updateLogs") {
+      loadLogs();
+    }
+  });
+
+  await loadSettings();
   await loadLogs();
+}
+
+async function loadSettings() {
+  await loadApiKey();
+  await loadKeptDomains();
 }
 
 function setupEventListeners() {
@@ -20,7 +50,7 @@ function setupEventListeners() {
     .getElementById("settingsBtn")
     .addEventListener("click", toggleSettings);
 
-  document.getElementById("debugBtn").addEventListener("click", showDebugInfo);
+  document.getElementById("clearBtn").addEventListener("click", clearLogs);
 
   const filterTabs = document.querySelectorAll(".filter-tab");
   filterTabs.forEach((tab) => {
@@ -63,8 +93,8 @@ function setupEventListeners() {
     .getElementById("closeSettingsBtn")
     .addEventListener("click", toggleSettings);
   document
-    .getElementById("saveApiKeyModal")
-    .addEventListener("click", saveApiKey);
+    .getElementById("saveSettingsBtn")
+    .addEventListener("click", saveSettings);
 }
 
 async function loadApiKey() {
@@ -75,10 +105,43 @@ async function loadApiKey() {
   }
 }
 
+async function loadKeptDomains() {
+  const domains = await chrome.runtime.sendMessage({
+    action: "getKeptDomains",
+  });
+  document.getElementById("keptDomainsInput").value = domains.join(", ");
+}
+
+async function saveSettings() {
+  await saveApiKey();
+  await saveKeptDomains();
+  toggleSettings();
+  loadLogs(); // Reload logs to apply highlighting
+}
+
+async function saveKeptDomains() {
+  const domains = document
+    .getElementById("keptDomainsInput")
+    .value.split(",")
+    .map((d) => d.trim())
+    .filter(Boolean);
+
+  await chrome.runtime.sendMessage({
+    action: "setKeptDomains",
+    domains: domains,
+  });
+  showNotification("Kept domains saved.");
+}
+
 async function saveApiKey() {
   const apiKey = document.getElementById("apiKeyInputModal").value.trim();
   if (!apiKey) {
-    alert("Please enter a valid OpenAI API key");
+    // Silently ignore if no key is entered, but clear it if it was there before.
+    if (hasApiKey) {
+      await chrome.runtime.sendMessage({ action: "setApiKey", apiKey: "" });
+      hasApiKey = false;
+      showNotification("API key removed.");
+    }
     return;
   }
 
@@ -89,9 +152,7 @@ async function saveApiKey() {
 
   if (response.success) {
     hasApiKey = !!apiKey;
-    showNotification(apiKey ? "API key saved." : "API key removed.");
-    toggleSettings();
-
+    showNotification("API key saved.");
     if (document.getElementById("detailContent").style.display !== "none") {
       document.getElementById("analyzeBtn").style.display = hasApiKey
         ? "flex"
@@ -107,8 +168,7 @@ async function loadLogs() {
   });
 
   currentLogs = response.logs || [];
-  filteredLogs = [...currentLogs];
-  displayLogs();
+  filterLogs(currentFilter);
 }
 
 function displayLogs() {
@@ -144,8 +204,16 @@ function createLogTableRow(log) {
       ? "ERROR"
       : log.status;
 
+  const keptDomains = document
+    .getElementById("keptDomainsInput")
+    .value.split(",")
+    .map((d) => d.trim())
+    .filter(Boolean);
+  const isKept = keptDomains.some((kd) => domain.includes(kd));
+  const rowClass = isKept ? "kept-row" : "";
+
   return `
-    <tr>
+    <tr class="${rowClass}">
       <td class="request-name">${fileName}</td>
       <td><span class="request-method ${log.method.toLowerCase()}">${
     log.method
@@ -187,6 +255,23 @@ function filterLogs(method) {
         log.status === "error" ||
         log.status === "pending"
     );
+  } else if (method === "FAVORITES") {
+    const keptDomains = document
+      .getElementById("keptDomainsInput")
+      .value.split(",")
+      .map((d) => d.trim())
+      .filter(Boolean);
+
+    filteredLogs = currentLogs.filter((log) => {
+      const domain = new URL(log.url).hostname;
+      return keptDomains.some((kd) => domain.includes(kd));
+    });
+  } else if (method === "MEDIA") {
+    filteredLogs = currentLogs.filter(
+      (log) => log.type === "image" || log.type === "media"
+    );
+  } else if (method === "SCRIPTS") {
+    filteredLogs = currentLogs.filter((log) => log.type === "script");
   } else {
     filteredLogs = currentLogs.filter((log) => log.method === method);
   }
@@ -254,12 +339,17 @@ function showLogDetails(log) {
       (contentType && contentType.includes("json"))
     ) {
       try {
+        let content = "";
+        if (log.isTruncated) {
+          content += `<div class="truncation-warning">Response body truncated to 100KB</div>`;
+        }
         if (contentType.includes("json")) {
           const jsonData = JSON.parse(log.responseBody);
-          responseBodyContainer.innerHTML = formatJSON(jsonData);
+          content += formatJSON(jsonData);
         } else {
-          responseBodyContainer.innerHTML = `<pre>${log.responseBody}</pre>`;
+          content += `<pre>${log.responseBody}</pre>`;
         }
+        responseBodyContainer.innerHTML = content;
       } catch (e) {
         responseBodyContainer.innerHTML = `<pre>${log.responseBody}</pre>`;
       }
@@ -276,6 +366,26 @@ function showLogDetails(log) {
     }<br>Status: ${log.status}<br>From Cache: ${
       log.fromCache ? "Yes" : "No"
     }</div>`;
+  }
+
+  const mediaPreviewSection = document.getElementById("mediaPreviewSection");
+  mediaPreviewSection.style.display = "none";
+
+  const iframePreviewSection = document.getElementById("iframePreviewSection");
+  iframePreviewSection.style.display = "none";
+
+  if (
+    log.type === "xmlhttprequest" &&
+    typeof log.responseBody === "string" &&
+    log.responseBody.trim().startsWith("<")
+  ) {
+    iframePreviewSection.style.display = "block";
+    const iframeContent = document.getElementById("iframePreviewContent");
+    const iframe = document.createElement("iframe");
+    iframe.srcdoc = log.responseBody;
+    iframeContent.innerHTML = "";
+    iframeContent.appendChild(iframe);
+    previewSection.style.display = "none";
   }
 
   const previewSection = document.getElementById("previewSection");
@@ -348,6 +458,22 @@ function showLogDetails(log) {
       previewContent.innerHTML =
         '<div class="no-preview">No response body captured - cannot display preview</div>';
     }
+  }
+
+  if (
+    contentType &&
+    (contentType.startsWith("image/") ||
+      contentType.startsWith("video/") ||
+      contentType.startsWith("audio/"))
+  ) {
+    mediaPreviewSection.style.display = "block";
+    const mediaPreviewContent = document.getElementById("mediaPreviewContent");
+    mediaPreviewContent.innerHTML = `
+      <p>This is a media file. To view it, open it in a new tab.</p>
+      <a href="${log.url}" target="_blank" rel="noopener noreferrer" class="btn">Open Media</a>
+    `;
+    responseBodySection.style.display = "none";
+    previewSection.style.display = "none";
   }
 
   const responseHeadersSection = document.getElementById(
@@ -498,41 +624,12 @@ async function analyzeCurrentRequest() {
   }
 }
 
-async function showDebugInfo() {
-  const response = await chrome.runtime.sendMessage({
-    action: "getDebugInfo",
+async function clearLogs() {
+  await chrome.runtime.sendMessage({
+    action: "clearLogs",
     tabId: currentTabId,
   });
-
-  const info = response.debugInfo;
-  const debugText = `Debug Info for Current Tab:
-
-Total Requests: ${info.totalRequests}
-
-By Status:
-- Success (2xx): ${info.byStatus.success}
-- Redirect (3xx): ${info.byStatus.redirect}  
-- Error (4xx/5xx): ${info.byStatus.error}
-- Pending: ${info.byStatus.pending}
-
-By Method:
-- GET: ${info.byMethod.GET}
-- POST: ${info.byMethod.POST}
-- PUT: ${info.byMethod.PUT}
-- DELETE: ${info.byMethod.DELETE}
-- PATCH: ${info.byMethod.PATCH}
-- OPTIONS: ${info.byMethod.OPTIONS}
-- HEAD: ${info.byMethod.HEAD}
-
-By Type:
-${Object.entries(info.byType)
-  .map(([type, count]) => `- ${type}: ${count}`)
-  .join("\n")}
-
-Current Filter: ${currentFilter}
-Displayed Requests: ${filteredLogs.length}`;
-
-  alert(debugText);
+  loadLogs();
 }
 
 function showNotification(message) {

@@ -74,6 +74,78 @@
         align-items: center;
       }
 
+      .capture-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-right: 10px;
+      }
+
+      .capture-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--bg-tertiary);
+        -webkit-transition: 0.4s;
+        transition: 0.4s;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        -webkit-transition: 0.4s;
+        transition: 0.4s;
+      }
+
+      input:checked + .slider {
+        background-color: var(--accent-gold);
+      }
+
+      input:focus + .slider {
+        box-shadow: 0 0 1px var(--accent-gold);
+      }
+
+      input:checked + .slider:before {
+        -webkit-transform: translateX(20px);
+        -ms-transform: translateX(20px);
+        transform: translateX(20px);
+      }
+
+      .slider.round {
+        border-radius: 24px;
+      }
+
+      .slider.round:before {
+        border-radius: 50%;
+      }
+
       .toolbar-btn {
         background-color: var(--bg-tertiary);
         border: 1px solid var(--border-color);
@@ -107,6 +179,17 @@
         border-radius: 8px;
         padding: 20px;
         margin-bottom: 20px;
+      }
+
+      #keptDomainsInput {
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-main);
+        color: var(--text-primary);
+        font-family: var(--font-main);
+        resize: vertical;
       }
 
       .api-key-input {
@@ -171,7 +254,7 @@
 
       .filter-tabs {
         display: flex;
-        gap: 8px;
+        gap: 6px;
         margin-bottom: 20px;
         justify-content: center;
       }
@@ -180,7 +263,7 @@
         border: 1px solid var(--border-color);
         color: var(--text-secondary);
         padding: 8px 16px;
-        border-radius: 20px;
+        border-radius: 3px;
         cursor: pointer;
         font-size: 12px;
         font-weight: 600;
@@ -235,6 +318,15 @@
 
       #requestsTable tbody tr:hover {
         background-color: var(--bg-tertiary);
+      }
+
+      #requestsTable tbody tr.kept-row {
+        background-color: rgba(212, 175, 55, 0.1);
+        border-left: 3px solid var(--accent-gold);
+      }
+
+      #requestsTable tbody tr.kept-row:hover {
+        background-color: rgba(212, 175, 55, 0.2);
       }
 
       #requestsTable tbody tr:last-child {
@@ -352,6 +444,17 @@
         color: var(--text-secondary);
         font-style: italic;
         padding: 20px;
+        text-align: center;
+      }
+
+      .truncation-warning {
+        background-color: var(--accent-gold-muted);
+        color: var(--text-primary);
+        padding: 8px 12px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        font-weight: 600;
+        font-size: 12px;
         text-align: center;
       }
 
@@ -716,6 +819,23 @@
         font-size: 13px;
       }
 
+      #iframePreviewContent iframe {
+        width: 100%;
+        height: 300px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+      }
+
+      #mediaPreviewContent {
+        text-align: center;
+        padding: 20px;
+      }
+
+      #mediaPreviewContent p {
+        margin-bottom: 15px;
+        color: var(--text-secondary);
+      }
+
       #settings-overlay.hidden {
         display: none;
       }
@@ -892,7 +1012,7 @@
         </div>
       </div>
       <div class="header-toolbar">
-        <button id="debugBtn" class="toolbar-btn" title="Debug Info">
+        <button id="clearBtn" class="toolbar-btn" title="Clear Logs">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -901,10 +1021,17 @@
           >
             <path
               fill="currentColor"
-              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
             />
           </svg>
         </button>
+        <div class="capture-toggle">
+          <label for="captureSwitch" class="capture-label">Capture</label>
+          <label class="switch">
+            <input type="checkbox" id="captureSwitch" />
+            <span class="slider round"></span>
+          </label>
+        </div>
         <button id="settingsBtn" class="toolbar-btn" title="Settings">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -938,13 +1065,53 @@
     <div id="mainContent" class="content">
       <div class="filter-tabs">
         <button class="filter-tab active" data-filter="ALL">ALL</button>
-        <button class="filter-tab" data-filter="SUCCESS">SUCCESS</button>
-        <button class="filter-tab" data-filter="FAILED">FAILED</button>
+        <button class="filter-tab" data-filter="FAVORITES" title="Favorites">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="1.3em"
+            height="1.3em"
+            viewBox="0 0 24 24"
+            style="vertical-align: middle"
+          >
+            <path
+              fill="currentColor"
+              d="m12 17.275l-4.15 2.5q-.275.175-.575.15t-.525-.2t-.35-.437t-.05-.588l1.1-4.725L3.775 10.8q-.25-.225-.312-.513t.037-.562t.3-.45t.55-.225l4.85-.425l1.875-4.45q.125-.3.388-.45t.537-.15t.537.15t.388.45l1.875 4.45l4.85.425q.35.05.55.225t.3.45t.038.563t-.313.512l-3.675 3.175l1.1 4.725q.075.325-.05.588t-.35.437t-.525-.2t-.575-.15z"
+            />
+          </svg>
+        </button>
+        <button class="filter-tab" data-filter="SUCCESS">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="1.3em"
+            height="1.3em"
+            viewBox="0 0 1024 1024"
+          >
+            <path
+              fill="currentColor"
+              d="M512 64a448 448 0 1 1 0 896a448 448 0 0 1 0-896m-55.808 536.384l-99.52-99.584a38.4 38.4 0 1 0-54.336 54.336l126.72 126.72a38.27 38.27 0 0 0 54.336 0l262.4-262.464a38.4 38.4 0 1 0-54.272-54.336z"
+            />
+          </svg>
+        </button>
+        <button class="filter-tab" data-filter="FAILED">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="1.3em"
+            height="1.3em"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="currentColor"
+              d="M13 10h-2V6h2zm0 2h-2v2h2zm9-8v12a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2m-2 0H4v13.2L5.2 16H20z"
+            />
+          </svg>
+        </button>
         <button class="filter-tab" data-filter="GET">GET</button>
         <button class="filter-tab" data-filter="POST">POST</button>
         <button class="filter-tab" data-filter="PUT">PUT</button>
         <button class="filter-tab" data-filter="DELETE">DELETE</button>
         <button class="filter-tab" data-filter="PATCH">PATCH</button>
+        <button class="filter-tab" data-filter="MEDIA">MEDIA</button>
+        <button class="filter-tab" data-filter="SCRIPTS">SCRIPTS</button>
       </div>
 
       <div class="table-container">
@@ -973,6 +1140,27 @@
       </div>
 
       <div class="detail-sections">
+        <div class="detail-section">
+          <h3>AI Analysis</h3>
+          <div id="aiAnalysisContainer">
+            <button id="analyzeBtn" class="analyze-btn">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fill="currentColor"
+                  d="M5.465 9.83a.92.92 0 0 0 1.07-.001a1 1 0 0 0 .341-.459l.347-1.067a1.7 1.7 0 0 1 1.078-1.079l1.086-.353a.923.923 0 0 0-.037-1.75l-1.069-.346a1.7 1.7 0 0 1-1.08-1.078l-.353-1.084a.92.92 0 0 0-.869-.61a.92.92 0 0 0-.875.624l-.356 1.09A1.71 1.71 0 0 1 3.7 4.775l-1.084.351a.923.923 0 0 0 .013 1.745l1.067.347a1.71 1.71 0 0 1 1.081 1.083l.352 1.08c.063.18.181.337.337.448m5.07 4.021a.8.8 0 0 0 .464.148a.81.81 0 0 0 .759-.55l.248-.762c.053-.158.143-.303.26-.421s.262-.207.42-.259l.772-.252a.8.8 0 0 0-.023-1.521l-.764-.249a1.08 1.08 0 0 1-.68-.678l-.252-.774a.8.8 0 0 0-1.518.011l-.247.762a1.07 1.07 0 0 1-.664.679l-.776.253a.8.8 0 0 0-.388 1.221c.099.14.239.245.4.3l.763.247a1.08 1.08 0 0 1 .68.683l.253.774a.8.8 0 0 0 .292.388"
+                />
+              </svg>
+              <span>Analyze with AI</span>
+            </button>
+            <div id="aiResult" class="ai-result" style="display: none"></div>
+          </div>
+        </div>
+
         <div class="detail-section">
           <h3>Basic Information</h3>
           <div class="info-list">
@@ -1032,6 +1220,24 @@
         </div>
 
         <div
+          class="detail-section"
+          id="iframePreviewSection"
+          style="display: none"
+        >
+          <h3>Preview</h3>
+          <div id="iframePreviewContent"></div>
+        </div>
+
+        <div
+          class="detail-section"
+          id="mediaPreviewSection"
+          style="display: none"
+        >
+          <h3>Media</h3>
+          <div id="mediaPreviewContent"></div>
+        </div>
+
+        <div
           id="responseHeadersSection"
           class="detail-section"
           style="display: none"
@@ -1059,27 +1265,6 @@
             </button>
           </div>
         </div>
-
-        <div class="detail-section">
-          <h3>AI Analysis</h3>
-          <div id="aiAnalysisContainer">
-            <button id="analyzeBtn" class="analyze-btn">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fill="currentColor"
-                  d="M5.465 9.83a.92.92 0 0 0 1.07-.001a1 1 0 0 0 .341-.459l.347-1.067a1.7 1.7 0 0 1 1.078-1.079l1.086-.353a.923.923 0 0 0-.037-1.75l-1.069-.346a1.7 1.7 0 0 1-1.08-1.078l-.353-1.084a.92.92 0 0 0-.869-.61a.92.92 0 0 0-.875.624l-.356 1.09A1.71 1.71 0 0 1 3.7 4.775l-1.084.351a.923.923 0 0 0 .013 1.745l1.067.347a1.71 1.71 0 0 1 1.081 1.083l.352 1.08c.063.18.181.337.337.448m5.07 4.021a.8.8 0 0 0 .464.148a.81.81 0 0 0 .759-.55l.248-.762c.053-.158.143-.303.26-.421s.262-.207.42-.259l.772-.252a.8.8 0 0 0-.023-1.521l-.764-.249a1.08 1.08 0 0 1-.68-.678l-.252-.774a.8.8 0 0 0-1.518.011l-.247.762a1.07 1.07 0 0 1-.664.679l-.776.253a.8.8 0 0 0-.388 1.221c.099.14.239.245.4.3l.763.247a1.08 1.08 0 0 1 .68.683l.253.774a.8.8 0 0 0 .292.388"
-                />
-              </svg>
-              <span>Analyze with AI</span>
-            </button>
-            <div id="aiResult" class="ai-result" style="display: none"></div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -1102,7 +1287,15 @@
             placeholder="Enter your API key"
           />
         </div>
-        <button id="saveApiKeyModal" class="save-btn">Save</button>
+        <div class="form-group">
+          <label for="keptDomainsInput">Kept Domains</label>
+          <textarea
+            id="keptDomainsInput"
+            rows="4"
+            placeholder="Enter domains to keep, separated by commas (e.g., google.com, api.example.com)"
+          ></textarea>
+        </div>
+        <button id="saveSettingsBtn" class="save-btn">Save</button>
         <button id="closeSettingsBtn" class="close-btn">&times;</button>
       </div>
     </div>
